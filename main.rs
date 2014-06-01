@@ -2,11 +2,22 @@ use std::io::File; /* input/output */
 
 use std::os;
 
+static MAX_RAM : uint = 4096;
+
 fn read_game(file_path: ~str) -> Vec<u8> {
-    match File::open(&Path::new(file_path)).read_to_end() {
+    
+    let memory = match File::open(&Path::new(file_path)).read_to_end() {
         Ok(mem) => mem,
         Err(e) => fail!("{}",e)
+    };
+
+    let size = memory.len();
+    if size > MAX_RAM {
+        fail!("game image is too large ({} bytes), 
+            must be a maximum of {} bytes", size, MAX_RAM);
     }
+
+    return memory;
 } 
 
 fn main() {
