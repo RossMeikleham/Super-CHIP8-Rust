@@ -12,19 +12,18 @@ fn read_game(file_path: ~str) -> Vec<u8> {
     };
 
     let size = memory.len();
-    if size > MAX_RAM {
-        fail!("game image is too large ({} bytes), 
-            must be a maximum of {} bytes", size, MAX_RAM);
-    }
 
-    return memory;
+    match size {
+        /* Pad end of memory until max memory capacity reached with 0s */
+        s if s <=  MAX_RAM  => memory + Vec::from_elem(MAX_RAM - size, 0u8),
+        /* Memory read in is too large */
+        _ =>   fail!("game image is too large ({} bytes), 
+               must be a maximum of {} bytes", size, MAX_RAM),
+    }
 } 
 
 fn main() {
     let mut args = os::args();
-    //let file_name: &~str = args.get(1);
-    //print!("reading file {}",file_name);
- 
    
    let file_name = match args.remove(1)  {
        Some(name) => name,
