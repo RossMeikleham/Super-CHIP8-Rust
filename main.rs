@@ -1,26 +1,35 @@
 use std::io::File; /* input/output */
+use std::string::String;
 
 use std::os;
 
 static MAX_RAM : uint = 4096;
 
-fn read_game(file_path: ~str) -> Vec<u8> {
+/* Reads a ROM file and returns a vector containing
+ * its bytes if successful. Otherwise an error string
+ * if the file is too large or IoError is raised */
+fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
     
-    let memory = match File::open(&Path::new(file_path)).read_to_end() {
-        Ok(mem) => mem,
-        Err(e) => fail!("{}",e)
-    };
+    match File::open(&Path::new(file_path)).read_to_end() {
+        Ok(mem) =>  {
 
-    let size = memory.len();
-
-    match size {
-        /* Pad end of memory until max memory capacity reached with 0s */
-        s if s <=  MAX_RAM  => memory + Vec::from_elem(MAX_RAM - size, 0u8),
-        /* Memory read in is too large */
-        _ =>   fail!("game image is too large ({} bytes), 
-               must be a maximum of {} bytes", size, MAX_RAM),
+            match mem.len() {
+            /* Pad end of memory until max memory capacity reached with 0s */
+                s if s <=  MAX_RAM  => 
+                    Ok(mem + Vec::from_elem(MAX_RAM - s, 0u8)),
+            /* Memory read in is too large */
+                s  =>   Err(format!("game image is too large 
+                    ({} bytes), must be a maximum of {} bytes"
+                    ,s , MAX_RAM).to_string()),
+            }
+        },
+        /* Error reading file */
+        Err(e) => Err(e.detail.unwrap_or("".to_string()))       
     }
 } 
+
+
+
 
 fn main() {
     let mut args = os::args();
@@ -30,8 +39,14 @@ fn main() {
        None => fail!("No file name specified")
    };
 
-    print!("reading file {}",file_name);
-    let memory = read_game(file_name);
-    print!("read file {}",memory);
+    debug!("reading file {}",file_name);
+
+    let memory = match read_game(file_name) {
+        Ok(mem) => mem,
+        Err(e) => fail!("{}",e)
+    };
+    
+    assert_eq!(memory.len(), MAX_RAM);
 }
+
 
