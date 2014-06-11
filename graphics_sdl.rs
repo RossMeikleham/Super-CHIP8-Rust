@@ -1,10 +1,12 @@
+#![crate_id = "graphics_impl"]
 extern crate sdl;
-   
 
 struct Screen {
-    surface sdl::video::Surface,
+    surface :sdl::video::Surface,
     on_color : sdl::video::Color,
     off_color :sdl::video::Color,
+    width: uint,
+    height: uint,
     x_max :uint,
     y_max :uint
 
@@ -12,9 +14,9 @@ struct Screen {
 
 impl Screen {
 
-    fn new(width :uint, height :uint, x_max :uint, y_max :uint) -> Screen {
+    fn new(width :int, height :int, x_max :uint, y_max :uint) -> Screen {
         sdl::init([sdl::InitVideo]);
-        sdl::wm::set_caption("CHIP-8 Emulator");  
+        sdl::wm::set_caption("CHIP-8 Emulator", "sdl");  
         
         let surface =   
             match sdl::video::set_video_mode(width, height, 32, 
@@ -25,32 +27,33 @@ impl Screen {
             };
 
         Screen { surface:surface, 
-                 on_color:sdl::video::Color  { r:0, g:255, b:0}, 
-                 off_color:sdl::video::Color { r:0, g:0,   b:0},
+                 on_color:  sdl::video::RGB(0, 255, 0), /* Green */ 
+                 off_color: sdl::video::RGB(0, 0,   0), /* Black */
+                 width:width as uint,
+                 height:height as uint,
                  x_max:x_max,
                  y_max:y_max 
                }
         }
-   }
+  
+    fn draw_pix(&mut self, x_pos :int, y_pos :int, set:bool) {
+        let x_unit = (self.width/self.x_max) as u16;
+        let y_unit = (self.height/self.y_max) as u16;
 
-    fn draw_pix(&mut self, x_pos :uint, y_pos :uint, set:bool) {
-        let x_unit = screen.ll.w/screen.x_max;
-        let y_uint = screen.ll.h/screen.y_max;
-
-        self.screen.fill_rect(Some(sdl:Rect {
-            x: x_pos * x_unit,
-            y: y_pos * y_unit,
+        self.surface.fill_rect(Some(sdl::Rect {
+            x: x_pos as i16 * x_unit as i16,
+            y: y_pos as i16 * y_unit as i16,
             w: x_unit,
             h: y_unit,
         }), match set { true => self.on_color, false => self.off_color }); 
     }
 
     pub fn clear_screen(&mut self) {
-        self.screen.fill_rect(Some(sdl:Rect {
+        self.surface.fill_rect(Some(sdl::Rect {
             x: 0,
             y: 0,
-            w: self.ll.w,
-            h: self.ll.h,
+            w: self.width as u16,
+            h: self.height as u16,
         }), self.off_color);    
     }
     
