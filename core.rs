@@ -1,4 +1,5 @@
 use std::rand::random;
+use std::bool;
 use graphics::Graphics; 
 /* CPU, Graphics and Memory core */
 
@@ -26,31 +27,6 @@ struct CPU {
 }
 
 
-fn dec_u12(val:u16) -> uint {
-    ((val - 1) % U12_MAX) as uint
-}
-
-fn dec_u12_n(val:u16, n:u16) -> uint {
-    ((val - n) % U12_MAX) as uint
-}
-
-fn inc_u12(val:u16) -> uint {
-    ((val + 1) % U12_MAX) as uint
-}
-
-fn inc_u12_n(val:u16, n:u16) -> uint {
-    ((val + n) % U12_MAX) as uint
-}
-
-
-/* returns 1 if true, 0 if false */
-fn bool_to_int(b:bool) -> u8 {
-    match b {
-        true => 1,
-        false => 0
-    }
-}
-
 
 impl CPU {
    
@@ -58,7 +34,7 @@ impl CPU {
         let mut cpu = CPU { registers: [0u8, ..16], 
               mem: [0u8, ..0xFFF],
               I: 0,
-              pc: 0,
+              pc: 0x200,
               sp: 1,
               stack : [0u16, ..16],
               sound_timer: 0,
@@ -81,9 +57,10 @@ impl CPU {
        }
 
        return cpu;
-    } 
+    }
+     
     
-    fn to_addr(dig1 :u8, dig2 :u8, dig :u8) -> u16 {
+    fn to_addr(dig1 :u8, dig2 :u8, dig3 :u8) -> u16 {
         ((dig1 << 8) | (dig2 << 4) | dig3) as u16
     }  
 
@@ -91,40 +68,48 @@ impl CPU {
         (dig1 << 4) | dig2
     }
 
-    fn u16_to_hex_vec(hex :u16) => (u8, u8, u8, u8) {
-         (hex & 0xF000) >> 12,  (hex & 0x0F00 >> 8),
-         (hex & 0x00F0 >> 4, hex & 0x000F)
+    fn u16_to_hex_vec(hex :u16) -> (u8, u8, u8, u8) {
+         (((hex & 0xF000) >> 12) as u8,  
+          ((hex & 0x0F00) >> 8)  as u8,
+          ((hex & 0x00F0) >> 4)  as u8, 
+           (hex & 0x000F)        as u8) 
     }
+
+    fn get_opcode(&self) -> u16 {
+        (self.registers[self.pc as uint] << 4) as u16 |
+        (self.registers[(self.pc + 1) as uint]) as u16
+    } 
 
     fn perform_cycle(&mut self) {
         
-        opcode = u16_to_hex_vec(self.get_opcode());
+        let opcode = self.get_opcode();
+        let opcode_v =  CPU::u16_to_hex_vec(opcode);
         self.inc_pc();
         
-        match opcode {
+        match opcode_v {
             (0x0, 0x0 ,0xE, 0x0) => self.clear_screen(),
             (0x0, 0x0, 0xE, 0xE) => self.ret(),
-            (0x0, N1, N2, N3)  => {}, 
-            (0x1, N1, N2, N3)  => self.jump(to_addr(N1, N2, N3)),
-            (0x2, N1, N2, N3)  => self.call(to_addr(N1, N2, N3)),
-            (0x3, X, N1, N2)  => self.skip_equals_reg_val(X, to_val(N1, N2)),
-            (0x4, X, N, N)  => self.skip_not_equals_reg_val(X, to_val(N1, N2)),
-            (0x5  X, Y, 0x0)  => self.skip_equals_regs(X, Y),
-            (0x6  X, N1, N2)  => self.mov_reg_val(X, to_val(N1, N2)),
-            (0x7, X, N1, N2)  => self.add_reg_val(X, to_val(N1, N2)),
+            (0x0, N1, N2, N3) => {}, 
+            (0x1, N1, N2, N3) => self.jump(CPU::to_addr(N1, N2, N3)),
+            (0x2, N1, N2, N3) => self.call(CPU::to_addr(N1, N2, N3)),
+            (0x3, X, N1, N2) => self.skip_equals_reg_val(X, CPU::to_val(N1, N2)),
+            (0x4, X, N1, N2) => self.skip_not_equals_reg_val(X, CPU::to_val(N1, N2)),
+            (0x5, X, Y, 0x0) => self.skip_equals_regs(X, Y),
+            (0x6, X, N1, N2) => self.mov_reg_val(X, CPU::to_val(N1, N2)),
+            (0x7, X, N1, N2) => self.add_reg_val(X, CPU::to_val(N1, N2)),
             (0x8, X, Y, 0x0) => self.mov_regs(X, Y),
             (0x8, X, Y, 0x1) => self.or_regs(X, Y),
             (0x8, X, Y, 0x2) => self.and_regs(X, Y),
             (0x8, X, Y, 0x3) => self.xor_regs(X, Y),
             (0x8, X, Y, 0x4) => self.add_regs(X, Y),
             (0x8, X, Y, 0x5) => self.sub_regs(X, Y),
-            (0x8, X, Y, 0x6) => self.shift_right(X, Y),
+            (0x8, X, _, 0x6) => self.shift_right(X),
             (0x8, X, Y, 0x7) => self.sub_regs(Y, X),
-            (0x8, X, Y, 0xE) => self.shift_left(X, Y),
+            (0x8, X, _, 0xE) => self.shift_left(X),
             (0x9, X, Y, 0x0) => self.skip_not_equals_regs(X, Y),
-            (0xA, N1, N2, N3) => self.set_i(to_addr(N1, N2, N3)),
-            (0xB, N1, N2, N3) => self.jump_val_reg0(to_addr(N1, N2, N3)),
-            (0xC, X, N1, N2) => self.rand(X, to_val(N1, N2)),
+            (0xA, N1, N2, N3) => self.set_i(CPU::to_addr(N1, N2, N3)),
+            (0xB, N1, N2, N3) => self.jump_val_reg0(CPU::to_addr(N1, N2, N3)),
+            (0xC, X, N1, N2) => self.rand(X, CPU::to_val(N1, N2)),
             (0xD, X, Y, N) => {},
             (0xE, X, 0x9, 0xE) => {},
             (0xE, X, 0xA, 0x1) => {},
@@ -136,39 +121,11 @@ impl CPU {
             (0xF, X, 0x2, 0x9) =>  {},
             (0xF, X, 0x3, 0x3) => self.binary_decimal(X),
             (0xF, X, 0x5, 0x5) => self.store_regs(X),
-            (0xF, X, 0x6, 0x5) => self.load_regs(X) 
+            (0xF, X, 0x6, 0x5) => self.load_regs(X),
+            _ => fail!("Unknown opcode {:x}",opcode)
         }
     }
      
-
-    fn regs_op(&mut self, op: |u8, u8| -> u8) {
-        let reg1 = self.get_reg_no_1();
-        let reg2 = self.get_reg_no_1();
-
-        self.registers[reg1] = 
-            op(self.registers[reg1], self.registers[reg2]);
-
-    }
-
-    fn regs_op_flags(&mut self, op: |u8, u8| -> u8, flag_val: |u8, u8| -> u8) {
-        let reg1 = self.get_reg_no_1();
-        let reg2 = self.get_reg_no_2();
-
-        self.registers[FLAG] = 
-            flag_val(self.registers[reg1], self.registers[reg2]);
-
-        self.registers[reg1] = 
-            flag_val(self.registers[reg1], self.registers[reg2]);
-    }
-
-
-    fn reg_val_op(&mut self, op: |u8, u8| -> u8) {
-        let reg = self.get_reg_no_1();
-        let val = self.get_val();
-
-        self.registers[reg] = op(self.registers[reg], val)
-   }
-
     
     fn reset(&mut self) {
         self.pc = 0x200;
@@ -192,8 +149,8 @@ impl CPU {
     }
 
     /* Jump to address at 0NNN */
-    fn call(&mut self) {
-        self.pc = self.opcode & 0xFFF;
+    fn call(&mut self, addr:u16) {
+        self.pc = addr & 0xFFF;
     }
 
     /* Clear the screen */
@@ -212,7 +169,7 @@ impl CPU {
 
     /* Skip next instruction if register X is equal to NN */
     fn skip_equals_reg_val(&mut self, reg:u8, val:u8) {
-        if self.registers[reg] == val {
+        if self.registers[reg as uint] == val {
             self.inc_pc();
         }
                 
@@ -241,92 +198,92 @@ impl CPU {
         self.registers[reg as uint] = val;
     }
 
-    
+
     fn add_reg_val(&mut self, reg:u8, val:u8) {
         self.registers[reg as uint] += val;
     }
     
-    fn mov_regs(&mut self) {
-        self.regs_op(|i, j| j);
+    fn mov_regs(&mut self, reg1:u8, reg2:u8) {
+        self.registers[reg1 as uint] = self.registers[reg2 as uint];
     }
 
-    fn or_regs(&mut self) {
-        self.regs_op(|i, j| i | j); 
+    fn or_regs(&mut self, reg1:u8, reg2:u8) {
+       self.registers[reg1 as uint] |= self.registers[reg2 as uint];
     }
 
-    fn and_regs(&mut self) {
-        self.regs_op(|i, j| i & j);
+    fn and_regs(&mut self, reg1:u8, reg2:u8) {
+        self.registers[reg1 as uint] |= self.registers[reg2 as uint];
     }
 
-    fn xor_regs(&mut self) {
-        self.regs_op(|i, j| i ^ j);
+    fn xor_regs(&mut self, reg1:u8, reg2:u8) {
+        self.registers[reg1 as uint] ^= self.registers[reg2 as uint];
     }
 
     /* Add two regs, if overflow set flag register otherwise
      * unset flag register */
-    fn add_regs(&mut self) {
-        self.regs_op_flags(|reg1, reg2| reg1 + reg2, 
-                           |reg1, reg2| bool_to_int(0xFF - reg1 > reg2)); 
+    fn add_regs(&mut self, reg1:u8, reg2:u8) {
+        self.registers[FLAG] =  bool::to_bit::<u8>(0xFF - reg1 > reg2);
+        self.registers[reg1 as uint] += self.registers[reg2 as uint];  
     }
 
     /* Sub reg2 from reg1, unset flag register if underflow,
      * set otherwise */
-    fn sub_regs(&mut self) {
-        self.regs_op_flags(|reg1, reg2| reg1 - reg2, 
-                           |reg1, reg2| bool_to_int(reg2 < reg1)); 
-      
+    fn sub_regs(&mut self, reg1:u8, reg2:u8) {
+        self.registers[FLAG] = bool::to_bit::<u8>(reg2 < reg1);
+        self.registers[reg1 as uint] -= self.registers[reg2 as uint]; 
     }
 
     /* Sub reg1 from reg2, unset flag register if underflow,
      * set otherwise */
-    fn sub_regs_inv(&mut self) {
-        self.regs_op_flags(|reg1, reg2| reg2 - reg1, 
-                           |reg1, reg2| bool_to_int(reg1 < reg2));
+    fn sub_regs_inv(&mut self, reg1:u8, reg2:u8) {
+        self.registers[FLAG] = bool::to_bit::<u8>(reg1 < reg2);
+        self.registers[reg2 as uint] -= self.registers[reg1 as uint]; 
     }
 
 
     /* Shift register left by 1, set flag register to most significant bit
      * before shifting */
-    fn shift_left(&mut self) {
-        self.regs_op_flags(|reg1, reg2| reg1 << 1, |reg1, reg2| reg1 & 0x80 >> 7);
+    fn shift_left(&mut self, reg:u8) {
+        self.registers[FLAG] = (self.registers[reg as uint] & 0x80) >> 7;
+        self.registers[reg as uint] <<= 1;
     }
+
 
     /* Shift register right by 1, set flag register to least significant bit
      * before shifting */
-    fn shift_right(&mut self) {
-        self.regs_op_flags(|reg1, reg2| reg1 >> 1, |reg1, reg2| reg1 & 0x1);
+    fn shift_right(&mut self, reg:u8) {
+        self.registers[FLAG] = self.registers[reg as uint] & 0x1;
+        self.registers[reg as uint] >>= 1;
     }
 
     /* Set index register to address in opcode */
-    fn set_i(&mut self) {        
-        self.I = self.get_addr();
+    fn set_i(&mut self, addr:u16) {        
+        self.I = addr;
     }
 
-    fn jump_val_reg0(&mut self) {
-        self.pc = self.registers[0] as u16 + self.get_addr();
+    fn jump_val_reg0(&mut self, addr:u16) {
+        self.pc = self.registers[0] as u16 + addr;
     }
 
-    fn rand(&mut self) {
-        self.reg_val_op( |reg, val| val & random::<u8>());
+    fn rand(&mut self, reg:u8, val:u8) {
+        self.registers[reg as uint] = val & random::<u8>();
     }
 
-    fn set_reg_delay(&mut self) {
-        self.registers[self.get_reg_no_1()] = self.delay_timer;
+    fn set_reg_delay(&mut self, reg:u8) {
+        self.registers[reg as uint] = self.delay_timer;
     }
     
-    fn set_reg_sound(&mut self) {
-        self.registers[self.get_reg_no_1()] = self.sound_timer;
+    fn set_reg_sound(&mut self, reg:u8) {
+        self.registers[reg as uint] = self.sound_timer;
     }
 
-    fn add_reg_index(&mut self) {
-        let temp = self.I;
-        self.I += self.registers[self.get_reg_no_1()] as u16;
-        if (temp > self.I)  {
-            self.registers[FLAG] = 1
-        } 
+    fn add_reg_index(&mut self, reg:u8) {
+        self.registers[FLAG] = 
+            bool::to_bit::<u8>(0xFFF - (self.registers[reg as uint] as u16) < self.I); 
+        self.I += self.registers[reg as uint] as u16
     }
 
-    fn store_regs(&mut self) {
+    fn store_regs(&mut self, reg:u8) {
         let mut addr = self.I;
         for reg in self.registers.iter() {
             self.mem[addr as uint] = *reg;
@@ -334,7 +291,7 @@ impl CPU {
         }
     }
 
-    fn load_regs(&mut self) {
+    fn load_regs(&mut self, reg:u8) {
         let mut addr = self.I;
         for reg in self.registers.mut_iter() {
             *reg = self.mem[addr as uint];
@@ -345,8 +302,8 @@ impl CPU {
     /*stores the Binary-coded decimal representation of VX, with the
      * most significant of three digits at the address in I, the middle digit
      * at I + 1, and the lsg at I + 2.*/
-    fn binary_decimal(&mut self) {
-        let val = self.registers[self.get_reg_no_1()];
+    fn binary_decimal(&mut self, reg:u8) {
+        let val = self.registers[reg as uint];
         self.mem[self.I as uint] = val/100;
         self.mem[(self.I + 1) as uint] = (val % 100)/10;
         self.mem[(self.I + 2) as uint] = (val % 100)%10;
