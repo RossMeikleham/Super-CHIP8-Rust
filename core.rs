@@ -7,13 +7,13 @@ mod graphics;
 
 //enum mode = {SCHIP, CHIP}; /* differentiate between CHIP and SCHIP modes */
 
-static U12_MAX : u16 = 4096;
+static MAX_RAM : u16 = 4096;
 static FLAG : uint = 15;
 
 
 struct CPU {
     registers : [u8, ..16], /* 16 8 bit general purpose registers */
-    mem : [u8, .. 0xFFF], /* 4096bytes of memory */
+    mem : [u8, .. MAX_RAM], /* 4096bytes of memory */
     I : u16, /* 16 bit index register */
     pc: u16, /* Program counter */
     sp: uint, /* Stack Pointer */
@@ -32,7 +32,7 @@ impl CPU {
    
     fn new(mut mem: Vec<u8>) -> CPU {
         let mut cpu = CPU { registers: [0u8, ..16], 
-              mem: [0u8, ..0xFFF],
+              mem: [0u8, ..MAX_RAM],
               I: 0,
               pc: 0x200,
               sp: 1,
@@ -146,6 +146,7 @@ impl CPU {
 
     fn inc_pc(&mut self) {
         self.pc += 2;
+        self.pc %= MAX_RAM;
     }
 
     /* Jump to address at 0NNN */
@@ -164,7 +165,7 @@ impl CPU {
     }
 
     fn jump(&mut self, addr: u16) {
-        self.pc = addr & 0xFFF;
+        self.pc = addr;
     }
 
     /* Skip next instruction if register X is equal to NN */
@@ -283,21 +284,42 @@ impl CPU {
         self.I += self.registers[reg as uint] as u16
     }
 
-    fn store_regs(&mut self, reg:u8) {
+    fn store_regs(&mut self, max_reg:u8) {
         let mut addr = self.I;
-        for reg in self.registers.iter() {
+        for reg in self.registers.slice_to(max_reg as uint + 1).iter() {
             self.mem[addr as uint] = *reg;
             addr += 1;
+            addr %= MAX_RAM;
         }
     }
 
-    fn load_regs(&mut self, reg:u8) {
+    fn load_regs(&mut self, max_reg:u8) {
         let mut addr = self.I;
-        for reg in self.registers.mut_iter() {
+        for reg in self.registers.mut_slice_to(max_reg as uint +1).mut_iter() {
             *reg = self.mem[addr as uint];
             addr += 1;
+            addr %= MAX_RAM;
         }
     }
+
+    fn store_regs2(&mut self, max_reg:u8) {
+        let regs = self.registers.slice_to(max_reg as uint + 1).iter();
+        let store = self.mem.mut_slice_from(self.I as uint).mut_iter();
+        for (mem, reg) in store.zip(regs) {
+            *mem = *reg;
+        }
+
+    }
+
+
+    fn load_regs2(&mut self, max_reg:u8) {
+        let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
+        let store = self.mem.slice_from(self.I as uint).iter();
+        for (mem, reg) in store.zip(regs) {
+            *reg = *mem;
+        }
+   }
+
 
     /*stores the Binary-coded decimal representation of VX, with the
      * most significant of three digits at the address in I, the middle digit
