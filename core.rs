@@ -285,24 +285,6 @@ impl CPU {
     }
 
     fn store_regs(&mut self, max_reg:u8) {
-        let mut addr = self.I;
-        for reg in self.registers.slice_to(max_reg as uint + 1).iter() {
-            self.mem[addr as uint] = *reg;
-            addr += 1;
-            addr %= MAX_RAM;
-        }
-    }
-
-    fn load_regs(&mut self, max_reg:u8) {
-        let mut addr = self.I;
-        for reg in self.registers.mut_slice_to(max_reg as uint +1).mut_iter() {
-            *reg = self.mem[addr as uint];
-            addr += 1;
-            addr %= MAX_RAM;
-        }
-    }
-
-    fn store_regs2(&mut self, max_reg:u8) {
         let regs = self.registers.slice_to(max_reg as uint + 1).iter();
         let store = self.mem.mut_slice_from(self.I as uint).mut_iter();
         for (mem, reg) in store.zip(regs) {
@@ -312,7 +294,7 @@ impl CPU {
     }
 
 
-    fn load_regs2(&mut self, max_reg:u8) {
+    fn load_regs(&mut self, max_reg:u8) {
         let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
         let store = self.mem.slice_from(self.I as uint).iter();
         for (mem, reg) in store.zip(regs) {
