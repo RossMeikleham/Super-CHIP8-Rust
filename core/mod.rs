@@ -11,18 +11,18 @@ static MAX_RAM : u16 = 4096;
 static FLAG : uint = 15;
 
 pub struct CPU {
-    registers : [u8, ..16], /* 16 8 bit general purpose registers */
-    mem : [u8, .. MAX_RAM], /* 4096bytes of memory */
-    I : u16, /* 16 bit index register */
-    pc: u16, /* Program counter */
-    sp: uint, /* Stack Pointer */
-    stack : [u16, ..16], /* 16 stack frames */
-    sound_timer : u8, 
-    delay_timer : u8,
-    hp_48_flags: [u16, ..8], /*SCHIP */
-    opcode : u16,
-    graphics :Graphics,
-    io :IO
+     registers : [u8, ..16], /* 16 8 bit general purpose registers */
+     mem : [u8, .. MAX_RAM], /* 4096bytes of memory */
+     I : u16, /* 16 bit index register */
+     pc: u16, /* Program counter */
+     sp: uint, /* Stack Pointer */
+     stack : [u16, ..16], /* 16 stack frames */
+     sound_timer : u8, 
+     delay_timer : u8,
+     hp_48_flags: [u16, ..8], /*SCHIP */
+     opcode : u16,
+     graphics :Graphics,
+     io :IO
 
 }
 
@@ -119,15 +119,14 @@ impl CPU {
     }
 
     /* obtains the current 16 bit opcode from memory */
-    pub fn get_opcode(&self) -> u16 {
+    fn get_opcode(&self) -> u16 {
         (self.mem[self.pc as uint] << 4) as u16 |
         (self.mem[(self.pc + 1) as uint]) as u16
     } 
 
     /* perform 1 CPU instruction */
-    pub fn perform_cycle(&mut self) {
+    fn execute(&mut self, opcode:u16) {
         
-        let opcode = self.get_opcode();
         let opcode_v =  CPU::u16_to_hex_vec(opcode);
         self.inc_pc();
 
@@ -169,6 +168,15 @@ impl CPU {
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
             _ => fail!("Unknown opcode {:x}",opcode)
         }
+    }
+
+    pub fn perform_cycle(&mut self) {
+        let opcode = self.get_opcode();
+        self.execute(opcode);
+    }
+
+    pub fn interpret(&mut self, opcode:u16) {
+        self.execute(opcode);
     }
     
     /* pop an item from the top of the stack,
