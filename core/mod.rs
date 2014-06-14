@@ -3,15 +3,14 @@ use std::bool;
 use graphics::Graphics; 
 use io::IO;
 
-/* CPU, Graphics and Memory core */
-
 mod graphics;
 mod io;
+/* CPU, Graphics and Memory core */
 
 static MAX_RAM : u16 = 4096;
 static FLAG : uint = 15;
 
-struct CPU {
+pub struct CPU {
     registers : [u8, ..16], /* 16 8 bit general purpose registers */
     mem : [u8, .. MAX_RAM], /* 4096bytes of memory */
     I : u16, /* 16 bit index register */
@@ -286,8 +285,11 @@ impl CPU {
     /* Add two regs, if overflow set flag register otherwise
      * unset flag register */
     fn add_regs(&mut self, reg1:u8, reg2:u8) {
-        self.registers[FLAG] =  bool::to_bit::<u8>(0xFF - reg1 > reg2);
-        self.registers[reg1 as uint] += self.registers[reg2 as uint];  
+        let register1 = self.registers[reg1 as uint];
+        let register2 = self.registers[reg2 as uint];
+        self.registers[FLAG] =  
+            bool::to_bit::<u8>(0xFF - register1 > register2);
+        self.registers[reg1 as uint] += register2;  
     }
 
     /* subtract the value of the second register from the first register 
@@ -296,8 +298,10 @@ impl CPU {
      * takes place.
      * Store subtraction result in first register*/
     fn sub_regs(&mut self, reg1:u8, reg2:u8) {
-        self.registers[FLAG] = bool::to_bit::<u8>(reg2 < reg1);
-        self.registers[reg1 as uint] -= self.registers[reg2 as uint]; 
+        let register1 = self.registers[reg1 as uint];
+        let register2 = self.registers[reg2 as uint];
+        self.registers[FLAG] = bool::to_bit::<u8>(register2 < register1);
+        self.registers[reg1 as uint] -= register2; 
     }
 
 
@@ -429,11 +433,3 @@ impl CPU {
 
 
 }
-
-
-fn main() {
-
-   
-    print!("yay");
-}
-

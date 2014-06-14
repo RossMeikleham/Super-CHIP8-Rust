@@ -1,7 +1,7 @@
 #![crate_id = "graphics_impl"]
 extern crate sdl;
 
-struct Screen {
+pub struct Screen {
     surface :sdl::video::Surface,
     on_color : sdl::video::Color,
     off_color :sdl::video::Color,
@@ -14,7 +14,7 @@ struct Screen {
 
 impl Screen {
 
-    fn new(width :int, height :int, x_max :uint, y_max :uint) -> Screen {
+    pub fn new(width :int, height :int, x_max :uint, y_max :uint) -> Screen {
         sdl::init([sdl::InitVideo]);
         sdl::wm::set_caption("CHIP-8 Emulator", "sdl");  
         
@@ -36,7 +36,7 @@ impl Screen {
                }
         }
   
-    fn draw_pix(&mut self, x_pos :int, y_pos :int, set:bool) {
+    pub fn draw_pix(&mut self, x_pos :int, y_pos :int, set:bool) {
         let x_unit = (self.width/self.x_max) as u16;
         let y_unit = (self.height/self.y_max) as u16;
 
@@ -55,6 +55,11 @@ impl Screen {
             w: self.width as u16,
             h: self.height as u16,
         }), self.off_color);    
+    }
+
+
+    pub fn show(&self) {
+        self.surface.flip();
     }
     
 }
