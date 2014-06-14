@@ -70,7 +70,7 @@ static schip8_fontset: [u8, ..160] = //10x16
 
 impl CPU {
 
-  pub fn new(mut mem: Vec<u8>) -> CPU {
+  pub fn new(mem: Vec<u8>) -> CPU {
         let mut cpu = CPU { registers: [0u8, ..16], 
               mem: [0u8, ..MAX_RAM],
               I: 0,
@@ -90,27 +90,28 @@ impl CPU {
        for (m, v) in cpu.mem.mut_iter().zip(mem.iter()) {
            *m = *v;
        }
+      
        /* Load CHIP8 fontset into unused locations 0x0 - 0x50 in memory */ 
        for (m, v) in cpu.mem.mut_iter().zip(chip8_fontset.iter()) {
             *m = *v;
        }
-
-       return cpu;
+       
+       return cpu; 
     }
      
     /* converts 3 hex digits into a 12 bit address */    
-    fn to_addr(dig1 :u8, dig2 :u8, dig3 :u8) -> u16 {
-        ((dig1 << 8) | (dig2 << 4) | dig3) as u16
+    pub fn to_addr(dig1 :u8, dig2 :u8, dig3 :u8) -> u16 {
+        (dig1 as u16 << 8) | (dig2 as u16 << 4)  | dig3 as u16
     }  
 
     /* combines 2 hex digits into a 8 bit value */
-    fn to_val(dig1 :u8, dig2 :u8) -> u8 {
+    pub fn to_val(dig1 :u8, dig2 :u8) -> u8 {
         (dig1 << 4) | dig2
     }
 
     /* takes a 12 bit value and extracts each hex digit
      * and stores in a tuple */ 
-    fn u16_to_hex_vec(hex :u16) -> (u8, u8, u8, u8) {
+    pub fn u16_to_hex_vec(hex :u16) -> (u8, u8, u8, u8) {
          (((hex & 0xF000) >> 12) as u8,  
           ((hex & 0x0F00) >> 8)  as u8,
           ((hex & 0x00F0) >> 4)  as u8, 
@@ -118,9 +119,9 @@ impl CPU {
     }
 
     /* obtains the current 16 bit opcode from memory */
-    fn get_opcode(&self) -> u16 {
-        (self.registers[self.pc as uint] << 4) as u16 |
-        (self.registers[(self.pc + 1) as uint]) as u16
+    pub fn get_opcode(&self) -> u16 {
+        (self.mem[self.pc as uint] << 4) as u16 |
+        (self.mem[(self.pc + 1) as uint]) as u16
     } 
 
     /* perform 1 CPU instruction */
@@ -129,43 +130,43 @@ impl CPU {
         let opcode = self.get_opcode();
         let opcode_v =  CPU::u16_to_hex_vec(opcode);
         self.inc_pc();
-        
+
         match opcode_v {
             (0x0, 0x0 ,0xE, 0x0) => self.clear_screen(),
             (0x0, 0x0, 0xE, 0xE) => self.ret(),
-            (0x0, N1, N2, N3) => {}, 
-            (0x1, N1, N2, N3) => self.jump(CPU::to_addr(N1, N2, N3)),
-            (0x2, N1, N2, N3) => self.call(CPU::to_addr(N1, N2, N3)),
-            (0x3, X, N1, N2) => self.skip_equals_reg_val(X, CPU::to_val(N1, N2)),
-            (0x4, X, N1, N2) => self.skip_not_equals_reg_val(X, CPU::to_val(N1, N2)),
-            (0x5, X, Y, 0x0) => self.skip_equals_regs(X, Y),
-            (0x6, X, N1, N2) => self.mov_reg_val(X, CPU::to_val(N1, N2)),
-            (0x7, X, N1, N2) => self.add_reg_val(X, CPU::to_val(N1, N2)),
-            (0x8, X, Y, 0x0) => self.mov_regs(X, Y),
-            (0x8, X, Y, 0x1) => self.or_regs(X, Y),
-            (0x8, X, Y, 0x2) => self.and_regs(X, Y),
-            (0x8, X, Y, 0x3) => self.xor_regs(X, Y),
-            (0x8, X, Y, 0x4) => self.add_regs(X, Y),
-            (0x8, X, Y, 0x5) => self.sub_regs(X, Y),
-            (0x8, X, _, 0x6) => self.shift_right(X),
-            (0x8, X, Y, 0x7) => self.sub_regs(Y, X),
-            (0x8, X, _, 0xE) => self.shift_left(X),
-            (0x9, X, Y, 0x0) => self.skip_not_equals_regs(X, Y),
-            (0xA, N1, N2, N3) => self.set_i(CPU::to_addr(N1, N2, N3)),
-            (0xB, N1, N2, N3) => self.jump_val_reg0(CPU::to_addr(N1, N2, N3)),
-            (0xC, X, N1, N2) => self.rand(X, CPU::to_val(N1, N2)),
-            (0xD, X, Y, N) => self.draw_sprite(X, Y, N),
-            (0xE, X, 0x9, 0xE) => self.skip_key_pressed(X),
-            (0xE, X, 0xA, 0x1) => self.skip_not_key_pressed(X),
-            (0xF, X, 0x0, 0x7) => self.set_reg_delay(X),
-            (0xF, X, 0x0, 0xA) => self.wait_for_key(X),
-            (0xF, X, 0x1, 0x5) => self.set_delay_reg(X),
-            (0xF, X, 0x1, 0x8) => self.set_sound_reg(X),
-            (0xF, X, 0x1, 0xE) => self.add_reg_index(X),
-            (0xF, X, 0x2, 0x9) => self.load_sprite(X),
-            (0xF, X, 0x3, 0x3) => self.binary_decimal(X),
-            (0xF, X, 0x5, 0x5) => self.store_regs(X),
-            (0xF, X, 0x6, 0x5) => self.load_regs(X),
+            (0x0, _, _, _) => {}, 
+            (0x1, n1, n2, n3) => self.jump(CPU::to_addr(n1, n2, n3)),
+            (0x2, n1, n2, n3) => self.call(CPU::to_addr(n1, n2, n3)),
+            (0x3, x, n1, n2) => self.skip_equals_reg_val(x, CPU::to_val(n1, n2)),
+            (0x4, x, n1, n2) => self.skip_not_equals_reg_val(x, CPU::to_val(n1, n2)),
+            (0x5, x, y, 0x0) => self.skip_equals_regs(x, y),
+            (0x6, x, n1, n2) => self.mov_reg_val(x, CPU::to_val(n1, n2)),
+            (0x7, x, n1, n2) => self.add_reg_val(x, CPU::to_val(n1, n2)),
+            (0x8, x, y, 0x0) => self.mov_regs(x, y),
+            (0x8, x, y, 0x1) => self.or_regs(x, y),
+            (0x8, x, y, 0x2) => self.and_regs(x, y),
+            (0x8, x, y, 0x3) => self.xor_regs(x, y),
+            (0x8, x, y, 0x4) => self.add_regs(x, y),
+            (0x8, x, y, 0x5) => self.sub_regs(x, y),
+            (0x8, x, _, 0x6) => self.shift_right(x),
+            (0x8, x, y, 0x7) => self.sub_regs(y, x),
+            (0x8, x, _, 0xE) => self.shift_left(x),
+            (0x9, x, y, 0x0) => self.skip_not_equals_regs(x, y),
+            (0xA, n1, n2, n3) => self.set_i(CPU::to_addr(n1, n2, n3)),
+            (0xB, n1, n2, n3) => self.jump_val_reg0(CPU::to_addr(n1, n2, n3)),
+            (0xC, x, n1, n2) => self.rand(x, CPU::to_val(n1, n2)),
+            (0xD, x, y, n) => self.draw_sprite(x, y, n),
+            (0xE, x, 0x9, 0xE) => self.skip_key_pressed(x),
+            (0xE, x, 0xA, 0x1) => self.skip_not_key_pressed(x),
+            (0xF, x, 0x0, 0x7) => self.set_reg_delay(x),
+            (0xF, x, 0x0, 0xA) => self.wait_for_key(x),
+            (0xF, x, 0x1, 0x5) => self.set_delay_reg(x),
+            (0xF, x, 0x1, 0x8) => self.set_sound_reg(x),
+            (0xF, x, 0x1, 0xE) => self.add_reg_index(x),
+            (0xF, x, 0x2, 0x9) => self.load_sprite(x),
+            (0xF, x, 0x3, 0x3) => self.binary_decimal(x),
+            (0xF, x, 0x5, 0x5) => self.store_regs(x),
+            (0xF, x, 0x6, 0x5) => self.load_regs(x),
             _ => fail!("Unknown opcode {:x}",opcode)
         }
     }
