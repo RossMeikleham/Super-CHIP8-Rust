@@ -1,10 +1,10 @@
 use std::rand::random;
 use std::bool;
-use graphics::Graphics; 
-use io::IO;
+use core::graphics::Graphics; 
+use core::io::IO;
 
-mod graphics;
-mod io;
+pub mod graphics;
+pub mod io;
 /* CPU, Graphics and Memory core */
 
 static MAX_RAM : u16 = 4096;
@@ -70,7 +70,7 @@ static schip8_fontset: [u8, ..160] = //10x16
 
 impl CPU {
 
-    fn new(mut mem: Vec<u8>) -> CPU {
+  pub fn new(mut mem: Vec<u8>) -> CPU {
         let mut cpu = CPU { registers: [0u8, ..16], 
               mem: [0u8, ..MAX_RAM],
               I: 0,
@@ -124,7 +124,7 @@ impl CPU {
     } 
 
     /* perform 1 CPU instruction */
-    fn perform_cycle(&mut self) {
+    pub fn perform_cycle(&mut self) {
         
         let opcode = self.get_opcode();
         let opcode_v =  CPU::u16_to_hex_vec(opcode);

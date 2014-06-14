@@ -57,7 +57,7 @@ fn main() {
     
     assert!(memory.len() <=  MAX_RAM);
 
-    let chip8 = core::CPU::new();
+    let mut chip8 = core::CPU::new(memory);
     loop {
         chip8.perform_cycle();
     }
