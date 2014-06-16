@@ -2,7 +2,7 @@ use std::rand::random;
 use std::bool;
 use core::graphics::Graphics; 
 use core::io::IO;
-
+use std::io::timer;
 pub mod graphics;
 pub mod io;
 /* CPU, Graphics and Memory core */
@@ -95,9 +95,23 @@ impl CPU {
        for (m, v) in cpu.mem.mut_iter().zip(chip8_fontset.iter()) {
             *m = *v;
        }
+
+       for m in cpu.mem.iter() {
+           print!("{:x} ", *m as uint);
+       }
+
+       println!("start: {:x}", cpu.mem[0x200] as uint);
        
-       return cpu; 
+       return cpu;
     }
+
+   pub fn get_mem(&self, loc:u16) -> u8 {
+       self.mem[(loc % 0xFFF) as uint]
+   }
+
+   pub fn get_reg(&self, reg:u8) -> u8 {
+       self.registers[reg as uint]
+   }
      
     /* converts 3 hex digits into a 12 bit address */    
     pub fn to_addr(dig1 :u8, dig2 :u8, dig3 :u8) -> u16 {
@@ -120,13 +134,17 @@ impl CPU {
 
     /* obtains the current 16 bit opcode from memory */
     fn get_opcode(&self) -> u16 {
-        (self.mem[self.pc as uint] << 4) as u16 |
+        let x = (self.mem[self.pc as uint] as u16) << 8;
+        print!("pc: {:x} ", self.pc as uint);
+
+        (((self.mem[self.pc as uint]) as u16) << 8)  |
         (self.mem[(self.pc + 1) as uint]) as u16
     } 
 
     /* perform 1 CPU instruction */
     fn execute(&mut self, opcode:u16) {
         
+        println!("opcode {:x}", opcode);
         let opcode_v =  CPU::u16_to_hex_vec(opcode);
         self.inc_pc();
 
@@ -168,6 +186,9 @@ impl CPU {
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
             _ => fail!("Unknown opcode {:x}",opcode)
         }
+
+        if self.delay_timer > 0 { self.delay_timer -= 1;}
+        if self.sound_timer > 9 { self.sound_timer -= 1;}
     }
 
     pub fn perform_cycle(&mut self) {
@@ -205,7 +226,8 @@ impl CPU {
     /* Store the current program counter
      * on the stack and jump to the supplied address */
     fn call(&mut self, addr:u16) {
-        self.push(self.pc);
+        let pc = self.pc;
+        self.push(pc);
         self.pc = addr & 0xFFF;
     }
 
@@ -297,7 +319,7 @@ impl CPU {
         let register1 = self.registers[reg1 as uint];
         let register2 = self.registers[reg2 as uint];
         self.registers[FLAG] =  
-            bool::to_bit::<u8>(0xFF - register1 > register2);
+            bool::to_bit::<u8>(0xFF - register1 < register2);
         self.registers[reg1 as uint] += register2;  
     }
 
@@ -407,16 +429,22 @@ impl CPU {
     }
 
     fn draw_sprite(&mut self, x:u8, y:u8, n:u8) {
+        println!("I: {:x} ",self.I);
+        println!("sec: {:x}",  self.mem[self.I as uint + 1]);
+       
         self.registers[FLAG] = 0;
-        for i in range(0, n + 1) {
-            if self.graphics.draw_8_pix(x, y + i, 
-                self.mem[(self.I + (i as u16)) as uint]) {
+        for i in range(0, n) {
+            if self.graphics.draw_8_pix(
+                    self.registers[x as uint], 
+                    self.registers[y as uint] + i,  
+                    self.mem[(self.I + (i as u16)) as uint]) {
 
                 self.registers[FLAG] = 1;
             }
         }
 
-        self.graphics.show();
+        self.graphics.show();       
+        timer::sleep(1000); 
     }
 
     fn load_sprite(&mut self, reg:u8) {

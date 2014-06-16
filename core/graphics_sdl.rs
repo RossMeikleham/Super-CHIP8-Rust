@@ -18,6 +18,7 @@ impl Screen {
         sdl::init([sdl::InitVideo]);
         sdl::wm::set_caption("CHIP-8 Emulator", "sdl");  
         
+        println!("size {:d}, {:d}",width, height);
         let surface =   
             match sdl::video::set_video_mode(width, height, 32, 
             [sdl::video::HWSurface], [sdl::video::DoubleBuf]) {
@@ -36,6 +37,14 @@ impl Screen {
                }
         }
   
+    pub fn set_x_max(&mut self, x:uint) {
+        self.x_max = x;
+    }
+
+    pub fn set_y_max(&mut self, y:uint) {
+        self.y_max = y;
+    }
+
     pub fn draw_pix(&mut self, x_pos :int, y_pos :int, set:bool) {
         let x_unit = (self.width/self.x_max) as u16;
         let y_unit = (self.height/self.y_max) as u16;
@@ -45,7 +54,8 @@ impl Screen {
             y: y_pos as i16 * y_unit as i16,
             w: x_unit,
             h: y_unit,
-        }), match set { true => self.on_color, false => self.off_color }); 
+        }), match set { true => self.on_color, false => self.off_color });
+        
     }
 
     pub fn clear_screen(&mut self) {
@@ -54,7 +64,7 @@ impl Screen {
             y: 0,
             w: self.width as u16,
             h: self.height as u16,
-        }), self.off_color);    
+        }), self.on_color);   
     }
 
 

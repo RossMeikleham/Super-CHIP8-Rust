@@ -59,6 +59,7 @@ fn main() {
 
     let mut chip8 = core::CPU::new(memory);
     loop {
+    //for i in range(0, 51) {
         chip8.perform_cycle();
     }
 }

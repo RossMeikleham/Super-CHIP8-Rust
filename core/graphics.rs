@@ -51,18 +51,22 @@ impl Graphics {
                    /* Initialize all pixels to blank */
                    screen: [[false, ..MAX_HORIZONTAL_PIXELS], ..MAX_VERTICAL_PIXELS],
                    out: graphics_impl::Screen::new(256, 128, 
-                    MAX_HORIZONTAL_PIXELS, MAX_VERTICAL_PIXELS)
+                    CHIP_dimensions.width, CHIP_dimensions.height)
          }
     }
 
     pub fn set_mode(&mut self, mode:Mode) { 
         self.mode = mode;
+        self.out.set_x_max(mode.get_width());
+        self.out.set_y_max(mode.get_height());
     }
     
 
     pub fn draw_pix(&mut self, x:uint, y:uint, set:bool) {
         self.screen[y][x] = set;
+        self.out.draw_pix(x as int, y as int, set);
     }
+        
 
     /* Draws a given line of 8 pixels starting at startx, starty,
      * returns whether a pixel was unset or not */
@@ -71,7 +75,7 @@ impl Graphics {
         for i in range(0, 8) {
 
             let x = ((startx + i as u8) as uint) % self.mode.get_width();
-            let y = starty as uint & self.mode.get_height();
+            let y = (starty as uint) % self.mode.get_height();
             let pix_state = match (line & (0x80 >> i)) >> (7 - i) {
                 0 => false,
                 1 => true,
@@ -80,21 +84,20 @@ impl Graphics {
 
             /* get set value of current pixel in line */
             let set = pix_state ^ self.screen[y][x]; 
-
-            self.draw_pix(x, y, set);
-            
+            self.draw_pix(x, y, set);  
            unset_occured = unset_occured || (pix_state && (!set)); 
         }
-
+       
         return unset_occured;
     }
 
     pub fn clear_screen(&mut self) {
-        for y in range(0, MAX_HORIZONTAL_PIXELS) {
-            for x in range(0, MAX_VERTICAL_PIXELS) {
+        for y in range(0, MAX_VERTICAL_PIXELS) {
+            for x in range(0, MAX_HORIZONTAL_PIXELS) {
                 self.screen[y][x] = false;
             }
         }
+        self.out.clear_screen();
     }
 
     pub fn show(&self) {
