@@ -14,7 +14,7 @@ pub struct IO_impl {
 fn index(keyset:[char, ..16], key:char) -> Option<u8> {
     for i in range(0u, keyset.len()) {
         if keyset[i] == key {
-            Some(i);
+            return Some(i as u8);
     }      
     }   
 
@@ -35,10 +35,9 @@ impl IO_impl {
 
     pub fn get_key(&mut self) -> u8 {
         'key_loop : loop {
-            match sdl::event::poll_event() {
-
+            match sdl::event::wait_event() {
             sdl::event::KeyEvent(k , _, _, _) =>  {
-                match index(self.key_set, ((k as int) as u8) as char) {
+                match index(self.key_set, ((k as u8) as char)) {
                     Some(index) => { return index;},
                     None => {}
                 }; 
@@ -47,6 +46,7 @@ impl IO_impl {
             _ => {}
             }
         }
+
     }
 
 
