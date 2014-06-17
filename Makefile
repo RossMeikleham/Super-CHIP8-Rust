@@ -2,6 +2,7 @@
 all:
 	rustc core/rust-sdl/src/sdl/lib.rs
 	rustc --crate-type=lib core/graphics_sdl.rs -L.
+	rustc --crate-type=lib core/sdl_io.rs -L.
 	rustc main.rs -L.
 
 test:

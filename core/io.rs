@@ -1,3 +1,4 @@
+extern crate sdl_io;
 
 static default_keys : [char, ..16] = ['z', 'x', 'c', 'v',
                                           'a', 's', 'd', 'f',
@@ -5,20 +6,24 @@ static default_keys : [char, ..16] = ['z', 'x', 'c', 'v',
                                           '1', '2', '3', '4'];
 
 pub struct IO {
-    keys : [char, ..16] 
+    keyboard: sdl_io::IO_impl,
+    keys : [char, ..16]
 }
 
 impl IO {
-    pub fn new() -> IO {
-       IO { keys:default_keys }
+
+    pub fn new() -> IO {        
+       IO { keyboard: sdl_io::IO_impl::new(default_keys),
+            keys: default_keys }
+
         
     }
     
-    pub fn wait_for_key(&self) -> u8 {
-        0
+    pub fn wait_for_key(&mut self) -> u8 {
+        self.keyboard.get_key()
     }
 
-    pub fn is_key_pressed(&self, key_index:u8) -> bool {
-        false
+    pub fn is_key_pressed(&mut self, key_index:u8) -> bool {
+        self.keyboard.key_pressed(self.keys[key_index as uint])
     }
 }

@@ -172,6 +172,7 @@ impl CPU {
             (0xA, n1, n2, n3) => self.set_i(CPU::to_addr(n1, n2, n3)),
             (0xB, n1, n2, n3) => self.jump_val_reg0(CPU::to_addr(n1, n2, n3)),
             (0xC, x, n1, n2) => self.rand(x, CPU::to_val(n1, n2)),
+            //(0xD, x, y, 0) && self.mode == SCHIP
             (0xD, x, y, n) => self.draw_sprite(x, y, n),
             (0xE, x, 0x9, 0xE) => self.skip_key_pressed(x),
             (0xE, x, 0xA, 0x1) => self.skip_not_key_pressed(x),
@@ -188,7 +189,7 @@ impl CPU {
         }
 
         if self.delay_timer > 0 { self.delay_timer -= 1;}
-        if self.sound_timer > 9 { self.sound_timer -= 1;}
+        if self.sound_timer > 0 { self.sound_timer -= 1;}
     }
 
     pub fn perform_cycle(&mut self) {
@@ -427,7 +428,10 @@ impl CPU {
         self.mem[(self.I + 2) as uint] = (val % 100)%10;
  
     }
-
+    
+    /* Draw sprite starting at x,y which is n lines
+     * of 8 pixels stored starting at memory location 
+     * of the contents of register I*/
     fn draw_sprite(&mut self, x:u8, y:u8, n:u8) {
         println!("I: {:x} ",self.I);
         println!("sec: {:x}",  self.mem[self.I as uint + 1]);
@@ -444,23 +448,29 @@ impl CPU {
         }
 
         self.graphics.show();       
-        timer::sleep(1000); 
     }
 
+    /* set I reg to sprite number stored in the given register */
     fn load_sprite(&mut self, reg:u8) {
         self.I = (5 * self.registers[reg as uint]) as u16;
     }
 
+    /* Wait for a keypress and set the contents of the
+     * given register to that keypress */
     fn wait_for_key(&mut self, reg:u8) {
         self.registers[reg as uint] = self.io.wait_for_key();  
     }
     
+    /* if key in given register is being pressed then
+     * skip the next instruction */
     fn skip_key_pressed(&mut self, reg:u8) {
         if self.io.is_key_pressed(self.registers[reg as uint]) {
             self.inc_pc();
         }
     }   
 
+    /* if key in given register is not being pressed then
+     * skip the next instruction */
     fn skip_not_key_pressed(&mut self, reg:u8) {
         if !self.io.is_key_pressed(self.registers[reg as uint]) {
            self.inc_pc();
