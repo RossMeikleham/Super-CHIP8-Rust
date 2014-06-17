@@ -12,7 +12,7 @@ static MAX_RAM : uint = 0xFFF;
 static START_RAM :uint = 0x200;
 
 static INSTRUCTIONS_PER_SEC : u64 = 500;
-static CYCLES_CHECK : u64 = 20;
+static CYCLES_CHECK : u64 = 5;
 
 /* Reads a ROM file and returns a vector containing
  * its bytes if successful. Otherwise an error string
@@ -41,20 +41,24 @@ fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
     }
 } 
 
-fn get_time_ms() -> u64 { time::precise_time_ns()/1000000 }
 
 fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
-    let current_time = get_time_ms();
+    println!("waiting {:u}",old_time);
+    let current_time = time::precise_time_ns();
     if old_time < current_time {
-        timer::sleep(((current_time - old_time) * instructions) / ins_per_sec);
-    }
+        let expired_ns = current_time - old_time;    
+        let overall_duration_ns = (1000000000 * instructions)/ins_per_sec; /*Calculate duration instruction should take */
+        if overall_duration_ns > expired_ns { /* ensure that duration has expired until next cycles begin */
+            timer::sleep((overall_duration_ns - expired_ns)/1000000);            
+       }
+    } 
 }
 
 
 fn run_program(mut chip8 :core::CPU, cycle_max: u64, ins_per_sec: u64)  {
     
     loop {
-        let start_timer = get_time_ms();
+        let start_timer = time::precise_time_ns();
         for _ in range(0, cycle_max) {
             chip8.perform_cycle();
         }
