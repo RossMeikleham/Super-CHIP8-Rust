@@ -305,7 +305,7 @@ impl CPU {
     /* performa binary and on the values of the first and second
      * registers, store the result in the first register */
     fn and_regs(&mut self, reg1:u8, reg2:u8) {
-        self.registers[reg1 as uint] |= self.registers[reg2 as uint];
+        self.registers[reg1 as uint] &= self.registers[reg2 as uint];
     }
 
     /* perform binary xor on the values of the first and second
