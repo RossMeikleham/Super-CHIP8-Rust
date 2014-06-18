@@ -274,8 +274,34 @@ fn check_address_add_r0() {
 }
 
 
+#[test]
+/*** Check instruction 1NNN ***/
+fn check_jump() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x1FFF);
+    assert_eq!(cpu.get_pc(), 0xFFF);
+}
 
 
+#[test]
+/*** Check instruction 2NNN ***/
+fn check_call() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x2342);
+    assert_eq!(cpu.get_pc(), 0x342);
+}
+
+
+
+#[test]
+fn check_return() {
+    let mut cpu = setup_blank_cpu();
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x2268);
+    cpu.interpret(0x00EE);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+
+}
 
 
 
