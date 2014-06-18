@@ -21,6 +21,14 @@ pub enum Mode { CHIP,
 
 
 impl Mode {
+    
+    pub fn get_CHIP() -> Mode {
+        CHIP
+    }
+
+    pub fn get_SCHIP() -> Mode {
+        SCHIP
+    }
 
     fn get_width(&self) -> uint {
         match *self {
@@ -36,6 +44,7 @@ impl Mode {
         }
     } 
 }
+
 
 
 pub struct Graphics {

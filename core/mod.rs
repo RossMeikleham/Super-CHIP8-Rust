@@ -1,6 +1,7 @@
 use std::rand::random;
 use std::bool;
 use core::graphics::Graphics; 
+use core::graphics::Mode;
 use core::io::IO;
 use std::io::timer;
 pub mod graphics;
@@ -21,7 +22,9 @@ pub struct CPU {
      delay_timer : u8,
      hp_48_flags: [u8, ..8], /*SCHIP */
      graphics :Graphics,
-     io :IO
+     io :IO,
+     halt:bool,
+     mode:Mode
 
 }
 
@@ -80,7 +83,9 @@ impl CPU {
               delay_timer: 0,
               hp_48_flags: [0u8, ..8],
               graphics : Graphics::new(),
-              io : IO::new()
+              io : IO::new(),
+              halt:false,
+              mode:Mode::get_CHIP() 
        };
         
        
@@ -149,15 +154,19 @@ impl CPU {
         match opcode_v {
             (0x0, 0x0 ,0xE, 0x0) => self.clear_screen(),
             (0x0, 0x0, 0xE, 0xE) => self.ret(), 
-           /* 
-            (0x0, 0x0, 0xC, N) => ,
-            (0x0, 0x0, 0xF, 0xB) => ,
-            (0x0, 0x0, 0xF, 0xC) =>,
-            (0x0, 0x0, 0xF, 0xD) =>,
-            (0x0, 0x0, 0xF, 0xE) =>,
-            (0x0, 0x0, 0xF, 0xF) =>,
-            */
-            (0x0, _, _, _) => {}, 
+           
+            (0x0, a, b, c) => {
+                match (self.mode, (a, b, c)) {
+                    (SCHIP, (0x0, 0xC, n)) => self.scroll_n_down(n),
+                    (SCHIP, (0x0, 0xF, 0xB)) => self.scroll_4_right(),
+                    (SCHIP, (0x0, 0xF, 0xC)) => self.scroll_4_left(),
+                    (SCHIP, (0x0, 0xF, 0xD)) => self.exit(),
+                    (SCHIP, (0x0, 0xF, 0xE)) => self.set_chip_mode(),
+                    (SCHIP, (0x0, 0xF, 0xF)) => self.set_super_chip_mode(),
+                     _ => {}, 
+                }
+            },
+
             (0x1, n1, n2, n3) => self.jump(CPU::to_addr(n1, n2, n3)),
             (0x2, n1, n2, n3) => self.call(CPU::to_addr(n1, n2, n3)),
             (0x3, x, n1, n2) => self.skip_equals_reg_val(x, CPU::to_val(n1, n2)),
@@ -179,9 +188,11 @@ impl CPU {
             (0xB, n1, n2, n3) => self.jump_val_reg0(CPU::to_addr(n1, n2, n3)),
             (0xC, x, n1, n2) => self.rand(x, CPU::to_val(n1, n2)),
 
-            //(0xD, x, y, 0) && self.mode == SCHIP
-            //
-            (0xD, x, y, n) => self.draw_sprite(x, y, n),
+            (0xD, x, y, n) => match (self.mode, (x, y, n)) {
+                (SCHIP, (x, y, 0x0)) => self.draw_extended_sprite(x, y),
+                (_, (x, y, n))       => self.draw_sprite(x, y, n),
+            },
+
             (0xE, x, 0x9, 0xE) => self.skip_key_pressed(x),
             (0xE, x, 0xA, 0x1) => self.skip_not_key_pressed(x),
             (0xF, x, 0x0, 0x7) => self.set_reg_delay(x),
@@ -194,9 +205,13 @@ impl CPU {
             (0xF, x, 0x5, 0x5) => self.store_regs(x),
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
 
-            /*(0xF, x, 0x3, 0x0) =>
-            (0xF, x, 0x7, 0x5) =>
-            (0xF, x, 0x8, 0x5) =>*/
+            (0xF, a, b, c) =>  match (self.mode, (a, b, c)) {
+                (SCHIP, (x, 0x3, 0x0)) => self.load_extended_sprite(x),
+                (SCHIP, (x, 0x7, 0x5)) => self.store_hp_regs(x),
+                (SCHIP, (x, 0x8, 0x5)) => self.load_hp_regs(x),
+                _ => fail!("Unknown opcode {:x}", opcode)
+            },
+
             _ => fail!("Unknown opcode {:x}",opcode)
         }
 
@@ -492,20 +507,36 @@ impl CPU {
     }
 
     /**** Extended Super Chip Instructions ****/
-    fn scroll_n_lines(&mut self, n:u8) {
+    fn scroll_n_down(&mut self, n:u8) {
+        self.graphics.scroll_down(n);
+        self.graphics.show();
     }
 
-    fn scroll_4_right(&mut self, n:u8) {
+    fn scroll_4_right(&mut self) {
+        self.graphics.scroll_right(4);
+        self.graphics.show();
     }
 
-    fn scroll_4_left(&mut self, n:u8) {
+    fn scroll_4_left(&mut self) {
+        self.graphics.scroll_left(4);
+        self.graphics.show();
     }
-    fn exit() {
+
+    fn exit(&mut self) {
+        self.halt = true;
+       
     }
+
     fn set_chip_mode(&mut self)  {
+        self.mode = Mode::get_CHIP();
+        self.graphics.set_mode(self.mode);
     }
+    
     fn set_super_chip_mode(&mut self) {
+        self.mode = Mode::get_SCHIP();
+        self.graphics.set_mode(self.mode);
     }
+
 
     /* Draw 16*16 sprite at x,y */
     fn draw_extended_sprite(&mut self, start_x:u8, start_y:u8) {
