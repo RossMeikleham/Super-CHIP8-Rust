@@ -19,7 +19,7 @@ pub struct CPU {
      stack : [u16, ..16], /* 16 stack frames */
      sound_timer : u8, 
      delay_timer : u8,
-     hp_48_flags: [u16, ..8], /*SCHIP */
+     hp_48_flags: [u8, ..8], /*SCHIP */
      graphics :Graphics,
      io :IO
 
@@ -78,7 +78,7 @@ impl CPU {
               stack : [0u16, ..16],
               sound_timer: 0,
               delay_timer: 0,
-              hp_48_flags: [0u16, ..8],
+              hp_48_flags: [0u8, ..8],
               graphics : Graphics::new(),
               io : IO::new()
        };
@@ -149,14 +149,14 @@ impl CPU {
         match opcode_v {
             (0x0, 0x0 ,0xE, 0x0) => self.clear_screen(),
             (0x0, 0x0, 0xE, 0xE) => self.ret(), 
-            
+           /* 
             (0x0, 0x0, 0xC, N) => ,
             (0x0, 0x0, 0xF, 0xB) => ,
             (0x0, 0x0, 0xF, 0xC) =>,
             (0x0, 0x0, 0xF, 0xD) =>,
             (0x0, 0x0, 0xF, 0xE) =>,
             (0x0, 0x0, 0xF, 0xF) =>,
-
+            */
             (0x0, _, _, _) => {}, 
             (0x1, n1, n2, n3) => self.jump(CPU::to_addr(n1, n2, n3)),
             (0x2, n1, n2, n3) => self.call(CPU::to_addr(n1, n2, n3)),
@@ -194,9 +194,9 @@ impl CPU {
             (0xF, x, 0x5, 0x5) => self.store_regs(x),
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
 
-            (0xF, x, 0x3, 0x0) =>
+            /*(0xF, x, 0x3, 0x0) =>
             (0xF, x, 0x7, 0x5) =>
-            (0xF, x, 0x8, 0x5) =>
+            (0xF, x, 0x8, 0x5) =>*/
             _ => fail!("Unknown opcode {:x}",opcode)
         }
 
@@ -508,25 +508,31 @@ impl CPU {
     }
 
     /* Draw 16*16 sprite at x,y */
-    fn draw_extended_sprite(&mut self, x:u8, y:u8) {
+    fn draw_extended_sprite(&mut self, start_x:u8, start_y:u8) {
+
+        for y in range(0u8, 16u8) {
+            let line = ((self.mem[(2 * y) as uint] as u16) << 4) 
+                | (self.mem[((2 * y) +1) as uint] as u16);
+            self.graphics.draw_16_pix(start_x, start_y + y, line); 
+        }
     }
 
+    /* load extended sprite 4x10 pixels */
     fn load_extended_sprite(&mut self, reg:u8) {
+        self.I = (0x50 + (0xA * self.registers[reg as uint])) as u16;
     }
-
-
 
     fn store_hp_regs(&mut self, max_reg:u8) {
         let regs = self.registers.slice_to(max_reg as uint + 1).iter();
         let store = self.hp_48_flags.mut_iter();
         /* itterate through both hp registers and general registers*/
         for (hp_reg, reg) in store.zip(regs) {
-            *hp_ = *reg;
+            *hp_reg = *reg;
         }
 
     }
 
-    fn load_hp_regs(&mut self, reg:u8) {
+    fn load_hp_regs(&mut self, max_reg:u8) {
         let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
         let store = self.hp_48_flags.iter();
         /* itterate through both memory and registers */
