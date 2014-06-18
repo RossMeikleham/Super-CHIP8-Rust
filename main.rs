@@ -8,7 +8,7 @@ use std::io::timer;
 
 mod core;
 
-static MAX_RAM : uint = 0xFFF;
+static MAX_RAM : uint = 0x1000;
 static START_RAM :uint = 0x200;
 
 static INSTRUCTIONS_PER_SEC : u64 = 500;

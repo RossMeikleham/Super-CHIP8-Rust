@@ -98,11 +98,19 @@ impl CPU {
     }
 
    pub fn get_mem(&self, loc:u16) -> u8 {
-       self.mem[(loc % 0xFFF) as uint]
+       self.mem[(loc % MAX_RAM) as uint]
    }
 
    pub fn get_reg(&self, reg:u8) -> u8 {
        self.registers[reg as uint]
+   }
+
+   pub fn get_pc(&self) -> u16 {
+       self.pc
+   }
+
+   pub fn get_index_reg(&self) -> u16 {
+       self.I
    }
      
     /* converts 3 hex digits into a 12 bit address */    
@@ -221,7 +229,7 @@ impl CPU {
     fn call(&mut self, addr:u16) {
         let pc = self.pc;
         self.push(pc);
-        self.pc = addr & 0xFFF;
+        self.pc = addr & MAX_RAM;
     }
 
     /* Clear the display */
@@ -381,7 +389,8 @@ impl CPU {
     fn add_reg_index(&mut self, reg:u8) {
         self.registers[FLAG] = 
             bool::to_bit::<u8>(0xFFF - (self.registers[reg as uint] as u16) < self.I); 
-        self.I += self.registers[reg as uint] as u16
+        self.I += self.registers[reg as uint] as u16;
+        self.I %= MAX_RAM;
     }
 
     /* store the values from register 0 up to and including
