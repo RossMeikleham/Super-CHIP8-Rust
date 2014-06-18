@@ -148,7 +148,15 @@ impl CPU {
 
         match opcode_v {
             (0x0, 0x0 ,0xE, 0x0) => self.clear_screen(),
-            (0x0, 0x0, 0xE, 0xE) => self.ret(),
+            (0x0, 0x0, 0xE, 0xE) => self.ret(), 
+            
+            (0x0, 0x0, 0xC, N) => ,
+            (0x0, 0x0, 0xF, 0xB) => ,
+            (0x0, 0x0, 0xF, 0xC) =>,
+            (0x0, 0x0, 0xF, 0xD) =>,
+            (0x0, 0x0, 0xF, 0xE) =>,
+            (0x0, 0x0, 0xF, 0xF) =>,
+
             (0x0, _, _, _) => {}, 
             (0x1, n1, n2, n3) => self.jump(CPU::to_addr(n1, n2, n3)),
             (0x2, n1, n2, n3) => self.call(CPU::to_addr(n1, n2, n3)),
@@ -170,7 +178,9 @@ impl CPU {
             (0xA, n1, n2, n3) => self.set_i(CPU::to_addr(n1, n2, n3)),
             (0xB, n1, n2, n3) => self.jump_val_reg0(CPU::to_addr(n1, n2, n3)),
             (0xC, x, n1, n2) => self.rand(x, CPU::to_val(n1, n2)),
+
             //(0xD, x, y, 0) && self.mode == SCHIP
+            //
             (0xD, x, y, n) => self.draw_sprite(x, y, n),
             (0xE, x, 0x9, 0xE) => self.skip_key_pressed(x),
             (0xE, x, 0xA, 0x1) => self.skip_not_key_pressed(x),
@@ -183,6 +193,10 @@ impl CPU {
             (0xF, x, 0x3, 0x3) => self.binary_decimal(x),
             (0xF, x, 0x5, 0x5) => self.store_regs(x),
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
+
+            (0xF, x, 0x3, 0x0) =>
+            (0xF, x, 0x7, 0x5) =>
+            (0xF, x, 0x8, 0x5) =>
             _ => fail!("Unknown opcode {:x}",opcode)
         }
 
@@ -477,5 +491,48 @@ impl CPU {
     
     }
 
+    /**** Extended Super Chip Instructions ****/
+    fn scroll_n_lines(&mut self, n:u8) {
+    }
 
+    fn scroll_4_right(&mut self, n:u8) {
+    }
+
+    fn scroll_4_left(&mut self, n:u8) {
+    }
+    fn exit() {
+    }
+    fn set_chip_mode(&mut self)  {
+    }
+    fn set_super_chip_mode(&mut self) {
+    }
+
+    /* Draw 16*16 sprite at x,y */
+    fn draw_extended_sprite(&mut self, x:u8, y:u8) {
+    }
+
+    fn load_extended_sprite(&mut self, reg:u8) {
+    }
+
+
+
+    fn store_hp_regs(&mut self, max_reg:u8) {
+        let regs = self.registers.slice_to(max_reg as uint + 1).iter();
+        let store = self.hp_48_flags.mut_iter();
+        /* itterate through both hp registers and general registers*/
+        for (hp_reg, reg) in store.zip(regs) {
+            *hp_ = *reg;
+        }
+
+    }
+
+    fn load_hp_regs(&mut self, reg:u8) {
+        let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
+        let store = self.hp_48_flags.iter();
+        /* itterate through both memory and registers */
+        for (hp_reg, reg) in store.zip(regs) {
+            *reg = *hp_reg;
+        }
+        
+    }
 }
