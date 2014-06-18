@@ -144,7 +144,6 @@ impl CPU {
     fn execute(&mut self, opcode:u16) {
         
         let opcode_v =  CPU::u16_to_hex_vec(opcode);
-        println!("opcode {:x}",opcode);
         self.inc_pc();
 
         match opcode_v {

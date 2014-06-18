@@ -18,7 +18,6 @@ impl Screen {
         sdl::init([sdl::InitVideo]);
         sdl::wm::set_caption("CHIP-8 Emulator", "sdl");  
         
-        println!("size {:d}, {:d}",width, height);
         let surface =   
             match sdl::video::set_video_mode(width, height, 32, 
             [sdl::video::HWSurface], [sdl::video::DoubleBuf]) {

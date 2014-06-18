@@ -43,7 +43,6 @@ fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
 
 
 fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
-    println!("waiting {:u}",old_time);
     let current_time = time::precise_time_ns();
     if old_time < current_time {
         let expired_ns = current_time - old_time;    
