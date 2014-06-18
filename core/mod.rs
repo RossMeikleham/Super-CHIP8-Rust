@@ -229,7 +229,7 @@ impl CPU {
     fn call(&mut self, addr:u16) {
         let pc = self.pc;
         self.push(pc);
-        self.pc = addr & MAX_RAM;
+        self.pc = addr % MAX_RAM;
     }
 
     /* Clear the display */

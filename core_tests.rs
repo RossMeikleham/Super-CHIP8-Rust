@@ -147,14 +147,131 @@ fn check_index_add_reg_overflow() {
 
 
 
+/*** Jump instructions */
+
+/*** Check instruction 3XNN ***/
+
+/* Check skip occurs if
+ * reg equals value */
+#[test]
+fn check_skip_reg_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6544); /* set reg 5 to 0x44 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x3544);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+}
+
+
+
+/* Check skip doesn't occur
+ * if reg doesn't equal value */
+#[test]
+fn check_no_skip_reg_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6067); /* set reg 0 to 0x67 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x3081);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+}
+
+/*** Check instruction 4XNN ***/
+
+
+/*Check skip occurs if
+ * reg not equal to value */
+#[test]
+fn check_skip_reg_not_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6794); /* set reg 7 to 0x94 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x4700);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+
+} 
+
+
+
+/* Check skip doesn't occur if
+ * reg  equals value  */
+#[test]
+fn check_no_skip_reg_not_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6DAB); /* set reg D to 0xAB */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x4DAB);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+}
+
+/*** Check instruction 5XY0 ***/
+
+/* Check skip occurs if
+ * registers contain the same value */
+#[test]
+fn check_skip_regs_equal() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6CF2); /* set reg C to 0xF2 */
+    cpu.interpret(0x69F2); /* set reg 9 to 0xF2 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x5C90);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+}
+
+/* Check skip doesn't occur
+ * if registers don't contain
+ * the same value */
+#[test]
+fn check_no_skip_regs_equal() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6A71); /* set reg A to 0x71 */
+    cpu.interpret(0x69BA); /* set reg 9 to 0xBA */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x5A90);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+}
 
 
 
 
+/*** Check instruction 9XY0 ***/
+
+/* Check skip occurs when regsisters
+ * not equal */
+#[test]
+fn check_skip_regs_not_equal() {  
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6661); /* set reg 6 to 0x66 */
+    cpu.interpret(0xEEE); /* set reg E to 0xEE */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x96E0);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+}
 
 
+/* Check skip doesn't occur when registers
+ * are equal */
+#[test]
+fn check_no_skip_regs_not_equal() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6555); /* set reg 5 to 0x55 */
+    cpu.interpret(0x6DDD); /* set reg D to 0xDD */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x5D0);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+
+}
 
 
+/*** Check instruction BNNN ***/
+
+#[test]
+fn check_address_add_r0() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6043);
+    cpu.interpret(0xB151);
+    assert_eq!(cpu.get_pc(), 0x043 + 0x151);
+    
+}
 
 
 
