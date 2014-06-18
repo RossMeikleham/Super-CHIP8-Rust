@@ -75,8 +75,6 @@ fn main() {
        None => fail!("No file name specified")
    };
 
-    //debug!("reading file {}",file_name);
-
     let memory = match read_rom(file_name) {
         Ok(mem) => mem,
         Err(e) => fail!("{}",e)

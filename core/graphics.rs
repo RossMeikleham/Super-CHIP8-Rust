@@ -76,16 +76,12 @@ impl Graphics {
 
             let x = ((startx + i as u8) as uint) % self.mode.get_width();
             let y = (starty as uint) % self.mode.get_height();
-            let pix_state = match (line & (0x80 >> i)) >> (7 - i) {
-                0 => false,
-                1 => true,
-                _ => fail!("Error setting pixel {} at ({},{})",i,x,y)
-            };
+            let pix_state = if (line & (0x80 >> i)) != 0 {true} else {false};
 
             /* get set value of current pixel in line */
-            let set = pix_state ^ self.screen[y][x]; 
+            let set = pix_state ^ self.screen[y][x];
             self.draw_pix(x, y, set);  
-           unset_occured = unset_occured || (pix_state && (!set)); 
+            unset_occured = unset_occured || (pix_state && (!set)); 
         }
        
         return unset_occured;

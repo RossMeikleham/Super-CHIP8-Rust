@@ -64,7 +64,7 @@ impl Screen {
             y: 0,
             w: self.width as u16,
             h: self.height as u16,
-        }), self.on_color);   
+        }), self.off_color);   
     }
 
 

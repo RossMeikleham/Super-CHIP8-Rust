@@ -20,7 +20,6 @@ pub struct CPU {
      sound_timer : u8, 
      delay_timer : u8,
      hp_48_flags: [u16, ..8], /*SCHIP */
-     opcode : u16,
      graphics :Graphics,
      io :IO
 
@@ -80,7 +79,6 @@ impl CPU {
               sound_timer: 0,
               delay_timer: 0,
               hp_48_flags: [0u16, ..8],
-              opcode : 0,
               graphics : Graphics::new(),
               io : IO::new()
        };
@@ -95,13 +93,7 @@ impl CPU {
        for (m, v) in cpu.mem.mut_iter().zip(chip8_fontset.iter()) {
             *m = *v;
        }
-
-       for m in cpu.mem.iter() {
-           print!("{:x} ", *m as uint);
-       }
-
-       println!("start: {:x}", cpu.mem[0x200] as uint);
-       
+ 
        return cpu;
     }
 
@@ -135,7 +127,6 @@ impl CPU {
     /* obtains the current 16 bit opcode from memory */
     fn get_opcode(&self) -> u16 {
         let x = (self.mem[self.pc as uint] as u16) << 8;
-        print!("pc: {:x} ", self.pc as uint);
 
         (((self.mem[self.pc as uint]) as u16) << 8)  |
         (self.mem[(self.pc + 1) as uint]) as u16
@@ -144,8 +135,8 @@ impl CPU {
     /* perform 1 CPU instruction */
     fn execute(&mut self, opcode:u16) {
         
-        println!("opcode {:x}", opcode);
         let opcode_v =  CPU::u16_to_hex_vec(opcode);
+        println!("opcode {:x}",opcode);
         self.inc_pc();
 
         match opcode_v {
@@ -164,9 +155,9 @@ impl CPU {
             (0x8, x, y, 0x2) => self.and_regs(x, y),
             (0x8, x, y, 0x3) => self.xor_regs(x, y),
             (0x8, x, y, 0x4) => self.add_regs(x, y),
-            (0x8, x, y, 0x5) => self.sub_regs(x, y),
+            (0x8, x, y, 0x5) => self.sub_regs(x, y, x),
             (0x8, x, _, 0x6) => self.shift_right(x),
-            (0x8, x, y, 0x7) => self.sub_regs(y, x),
+            (0x8, x, y, 0x7) => self.sub_regs(y, x, x),
             (0x8, x, _, 0xE) => self.shift_left(x),
             (0x9, x, y, 0x0) => self.skip_not_equals_regs(x, y),
             (0xA, n1, n2, n3) => self.set_i(CPU::to_addr(n1, n2, n3)),
@@ -200,6 +191,7 @@ impl CPU {
     pub fn interpret(&mut self, opcode:u16) {
         self.execute(opcode);
     }
+
     
     /* pop an item from the top of the stack,
      * decrements the stack pointer after popping */
@@ -324,16 +316,17 @@ impl CPU {
         self.registers[reg1 as uint] += register2;  
     }
 
+
     /* subtract the value of the second register from the first register 
      * if causes negative overflow unset the flag register, otherwise
      * set flag register, performs flag setting before subtraction
-     * takes place.
-     * Store subtraction result in first register*/
-    fn sub_regs(&mut self, reg1:u8, reg2:u8) {
+     * takes place. Store result in "store_reg".*/
+    fn sub_regs(&mut self, reg1:u8, reg2:u8, store_reg:u8) {
         let register1 = self.registers[reg1 as uint];
         let register2 = self.registers[reg2 as uint];
+        
         self.registers[FLAG] = bool::to_bit::<u8>(register2 < register1);
-        self.registers[reg1 as uint] -= register2; 
+        self.registers[store_reg as uint] = register1 -  register2;
     }
 
 
@@ -359,7 +352,7 @@ impl CPU {
 
     /* jump to the supplied address + value in register 0 */
     fn jump_val_reg0(&mut self, addr:u16) {
-        self.pc = self.registers[0] as u16 + addr;
+        self.pc = (self.registers[0] as u16 + addr) % MAX_RAM;
     }
 
     /* set register to supplied value and a random integer between 0 and 255 */
@@ -433,8 +426,6 @@ impl CPU {
      * of 8 pixels stored starting at memory location 
      * of the contents of register I*/
     fn draw_sprite(&mut self, x:u8, y:u8, n:u8) {
-        println!("I: {:x} ",self.I);
-        println!("sec: {:x}",  self.mem[self.I as uint + 1]);
        
         self.registers[FLAG] = 0;
         for i in range(0, n) {
@@ -444,7 +435,7 @@ impl CPU {
                     self.mem[(self.I + (i as u16)) as uint]) {
 
                 self.registers[FLAG] = 1;
-            }
+            } 
         }
 
         self.graphics.show();       
