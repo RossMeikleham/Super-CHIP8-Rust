@@ -87,6 +87,51 @@ impl Graphics {
         return unset_occured;
     }
 
+
+
+    pub fn scroll_right(&mut self, n:u8) {
+        for y in range(0, self.mode.get_height()) {
+            /*TODO research how to properly use a decreasing
+             * iterator in a range instead of this solution */
+            for x1 in range(-(self.mode.get_width() - 1), - (n as uint - 1)) {
+                let x = -x1;
+                let set = self.screen[x - n as uint][y];
+                self.draw_pix(x, y, set);            
+            }
+            for x  in range(0, n as uint) { 
+                self.draw_pix(x, y, false);
+            }
+        }
+    }
+
+    pub fn scroll_left(&mut self, n:u8) {
+        let x_max = self.mode.get_width();
+
+        for y in range(0 , self.mode.get_height()) {
+            for x in range(0, x_max - n as uint) {
+                let set = self.screen[x + n as uint][y];
+                self.draw_pix(x, y, set);
+            }
+            for x in range(x_max - n as uint, x_max) {
+                self.draw_pix(x, y, false);
+            }
+        }
+    }
+
+    pub fn scroll_down(&mut self, n:u8) {
+        let y_max = self.mode.get_height();
+        for x in range(0, self.mode.get_width()) {
+            for y in range(0, y_max - n as uint) {
+                let set = self.screen[x][y + n as uint];
+                self.draw_pix(x, y, set);
+            } 
+            
+            for y in range(y_max - n as uint, y_max) {
+                self.draw_pix(x, y, false);
+            }
+        }
+    }
+
     pub fn clear_screen(&mut self) {
         for y in range(0, MAX_VERTICAL_PIXELS) {
             for x in range(0, MAX_HORIZONTAL_PIXELS) {
