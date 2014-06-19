@@ -3,10 +3,11 @@ use std::bool;
 use core::graphics::Graphics; 
 use core::graphics::Mode;
 use core::io::IO;
-use std::io::timer;
 pub mod graphics;
 pub mod io;
 /* CPU, Graphics and Memory core */
+
+#[allow(dead_code)]
 
 static MAX_RAM : u16 = 4096;
 static FLAG : uint = 15;
@@ -29,8 +30,8 @@ pub struct CPU {
 }
 
 
-static chip8_fontset: [u8, ..80] = //5x16
-  [ 
+static sprite_set: [u8, ..(80 + 160)] =   
+   [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
     0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
@@ -46,11 +47,8 @@ static chip8_fontset: [u8, ..80] = //5x16
     0xF0, 0x80, 0x80, 0x80, 0xF0, // C
     0xE0, 0x90, 0x90, 0x90, 0xE0, // D
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
-    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
-  ];
-  
-static schip8_fontset: [u8, ..160] = //10x16
-  [
+    0xF0, 0x80, 0xF0, 0x80, 0x80,  //F 
+
     0x00, 0x3C, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x3C, 0x00, //0
     0x00, 0x08, 0x38, 0x08, 0x08, 0x08, 0x08, 0x08, 0x3E, 0x00, //1
     0x00, 0x38, 0x44, 0x04, 0x08, 0x10, 0x20, 0x44, 0x7C, 0x00, //2
@@ -85,7 +83,7 @@ impl CPU {
               graphics : Graphics::new(),
               io : IO::new(),
               halt:false,
-              mode:Mode::get_CHIP() 
+              mode:graphics::CHIP 
        };
         
        
@@ -95,10 +93,10 @@ impl CPU {
        }
       
        /* Load CHIP8 fontset into unused locations 0x0 - 0x50 in memory */ 
-       for (m, v) in cpu.mem.mut_iter().zip(chip8_fontset.iter()) {
+       for (m, v) in cpu.mem.mut_iter().zip(sprite_set.iter()) {
             *m = *v;
        }
- 
+
        return cpu;
     }
 
@@ -139,7 +137,6 @@ impl CPU {
 
     /* obtains the current 16 bit opcode from memory */
     fn get_opcode(&self) -> u16 {
-        let x = (self.mem[self.pc as uint] as u16) << 8;
 
         (((self.mem[self.pc as uint]) as u16) << 8)  |
         (self.mem[(self.pc + 1) as uint]) as u16
@@ -157,12 +154,12 @@ impl CPU {
            
             (0x0, a, b, c) => {
                 match (self.mode, (a, b, c)) {
-                    (SCHIP, (0x0, 0xC, n)) => self.scroll_n_down(n),
-                    (SCHIP, (0x0, 0xF, 0xB)) => self.scroll_4_right(),
-                    (SCHIP, (0x0, 0xF, 0xC)) => self.scroll_4_left(),
-                    (SCHIP, (0x0, 0xF, 0xD)) => self.exit(),
-                    (SCHIP, (0x0, 0xF, 0xE)) => self.set_chip_mode(),
-                    (SCHIP, (0x0, 0xF, 0xF)) => self.set_super_chip_mode(),
+                    (graphics::SCHIP, (0x0, 0xC, n)) => self.scroll_n_down(n),
+                    (graphics::SCHIP, (0x0, 0xF, 0xB)) => self.scroll_4_right(),
+                    (graphics::SCHIP, (0x0, 0xF, 0xC)) => self.scroll_4_left(),
+                    (graphics::SCHIP, (0x0, 0xF, 0xD)) => self.exit(),
+                    (graphics::SCHIP, (0x0, 0xF, 0xE)) => self.set_chip_mode(),
+                    (graphics::CHIP, (0x0, 0xF, 0xF)) => self.set_super_chip_mode(),
                      _ => {}, 
                 }
             },
@@ -188,8 +185,8 @@ impl CPU {
             (0xB, n1, n2, n3) => self.jump_val_reg0(CPU::to_addr(n1, n2, n3)),
             (0xC, x, n1, n2) => self.rand(x, CPU::to_val(n1, n2)),
 
-            (0xD, x, y, n) => match (self.mode, (x, y, n)) {
-                (SCHIP, (x, y, 0x0)) => self.draw_extended_sprite(x, y),
+            (0xD, x, y, n) =>  match (self.mode, (x, y, n)) {
+                (graphics::SCHIP, (x, y, 0x0)) => self.draw_extended_sprite(x, y),
                 (_, (x, y, n))       => self.draw_sprite(x, y, n),
             },
 
@@ -206,9 +203,9 @@ impl CPU {
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
 
             (0xF, a, b, c) =>  match (self.mode, (a, b, c)) {
-                (SCHIP, (x, 0x3, 0x0)) => self.load_extended_sprite(x),
-                (SCHIP, (x, 0x7, 0x5)) => self.store_hp_regs(x),
-                (SCHIP, (x, 0x8, 0x5)) => self.load_hp_regs(x),
+                (graphics::SCHIP, (x, 0x3, 0x0)) => self.load_extended_sprite(x),
+                (graphics::SCHIP, (x, 0x7, 0x5)) => self.store_hp_regs(x),
+                (graphics::SCHIP, (x, 0x8, 0x5)) => self.load_hp_regs(x),
                 _ => fail!("Unknown opcode {:x}", opcode)
             },
 
@@ -462,9 +459,11 @@ impl CPU {
     /* Draw sprite starting at x,y which is n lines
      * of 8 pixels stored starting at memory location 
      * of the contents of register I*/
-    fn draw_sprite(&mut self, x:u8, y:u8, n:u8) {
+    fn draw_sprite(&mut self, x:u8, y:u8, line_count:u8) {
        
         self.registers[FLAG] = 0;
+        println!("drawing chip {:d}, {:d}, {:d}", self.registers[x as uint] as int, self.registers[y as uint] as int, line_count as int); 
+        let n = if line_count == 0 {16} else {line_count};
         for i in range(0, n) {
             if self.graphics.draw_8_pix(
                     self.registers[x as uint], 
@@ -472,7 +471,8 @@ impl CPU {
                     self.mem[(self.I + (i as u16)) as uint]) {
 
                 self.registers[FLAG] = 1;
-            } 
+            }
+            println!("line {:x}", self.mem[(self.I + (i as u16)) as uint]);
         }
 
         self.graphics.show();       
@@ -528,24 +528,29 @@ impl CPU {
     }
 
     fn set_chip_mode(&mut self)  {
-        self.mode = Mode::get_CHIP();
+        self.mode = graphics::CHIP;
         self.graphics.set_mode(self.mode);
     }
     
     fn set_super_chip_mode(&mut self) {
-        self.mode = Mode::get_SCHIP();
+        self.mode = graphics::SCHIP;
         self.graphics.set_mode(self.mode);
     }
 
 
     /* Draw 16*16 sprite at x,y */
     fn draw_extended_sprite(&mut self, start_x:u8, start_y:u8) {
+        self.registers[FLAG] = 0;
 
-        for y in range(0u8, 16u8) {
-            let line = ((self.mem[(2 * y) as uint] as u16) << 4) 
-                | (self.mem[((2 * y) +1) as uint] as u16);
-            self.graphics.draw_16_pix(start_x, start_y + y, line); 
+        for y in range(0u, 16u) {
+            let line = (self.mem[self.I as uint + (2 * y)] as u16 << 4) 
+                | (self.mem[self.I as uint + (2 * y) + 1] as u16);
+            if self.graphics.draw_16_pix(self.registers[start_x as uint], self.registers[start_y as uint] + y as u8, line) {
+                self.registers[FLAG] = 1;
+            }
         }
+
+        self.graphics.show();
     }
 
     /* load extended sprite 4x10 pixels */
