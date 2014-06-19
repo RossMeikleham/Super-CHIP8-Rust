@@ -1,4 +1,4 @@
-SCHIP-Rust
+CHIP-Rust
 ==========
 
 An implementation of a CHIP 8 emulator in Rust, created as an exercise for learning the Rust language.
@@ -62,9 +62,9 @@ $./core_tests
 Screenshots
 ==========
 CHIP 8 :
-![Invaders](/images/invaders.png) ![Pong](/images/pong.png)
+![Invaders](/images/invaders.png?raw=true) ![Pong](/images/pong.png?raw=true)
 Super CHIP 8:
-![Car](/images/car.png) ![ANT](/images/ant.png)
+![Car](/images/car.png?raw=true) ![ANT](/images/ant.png?raw=true)
 
 Resources
 ========
