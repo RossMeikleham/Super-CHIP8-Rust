@@ -19,7 +19,8 @@ which can execute makefiles.
 To download and build:
 ```
 git clone https://github.com/RossMeikleham/SCHIP-Rust.git
-git 
+cd SCHIP-Rust
+git submodule update --init
 make
 ```
 
@@ -60,7 +61,10 @@ $./core_tests
 
 Screenshots
 ==========
-
+CHIP 8 :
+![Invaders](/images/invaders.png) ![Pong](/images/pong.png)
+Super CHIP 8:
+![Car](/images/car.png) ![ANT](/images/ant.png)
 
 Resources
 ========
