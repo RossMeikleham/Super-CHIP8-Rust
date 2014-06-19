@@ -225,6 +225,10 @@ impl CPU {
         self.execute(opcode);
     }
 
+    pub fn is_finished(&self) -> bool {
+        self.halt
+    }
+
     
     /* pop an item from the top of the stack,
      * decrements the stack pointer after popping */
@@ -462,7 +466,6 @@ impl CPU {
     fn draw_sprite(&mut self, x:u8, y:u8, line_count:u8) {
        
         self.registers[FLAG] = 0;
-        println!("drawing chip {:d}, {:d}, {:d}", self.registers[x as uint] as int, self.registers[y as uint] as int, line_count as int); 
         let n = if line_count == 0 {16} else {line_count};
         for i in range(0, n) {
             if self.graphics.draw_8_pix(
@@ -472,7 +475,6 @@ impl CPU {
 
                 self.registers[FLAG] = 1;
             }
-            println!("line {:x}", self.mem[(self.I + (i as u16)) as uint]);
         }
 
         self.graphics.show();       

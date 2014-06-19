@@ -56,10 +56,14 @@ fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
 
 fn run_program(mut chip8 :core::CPU, cycle_max: u64, ins_per_sec: u64)  {
     
-    loop {
+    'run : loop {
         let start_timer = time::precise_time_ns();
         for _ in range(0, cycle_max) {
             chip8.perform_cycle();
+            /* Check if execution is finished */
+            if chip8.is_finished() {
+                break 'run;
+            }
         }
         wait_for_next_cycle(start_timer, cycle_max, ins_per_sec);
     }
