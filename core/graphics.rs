@@ -1,5 +1,4 @@
 extern crate graphics_impl;
-use std::bool;
 
 
 static MAX_HORIZONTAL_PIXELS : uint = 128;
@@ -21,6 +20,7 @@ pub enum Mode { CHIP,
 
 
 impl Mode {
+    
 
     fn get_width(&self) -> uint {
         match *self {
@@ -36,6 +36,7 @@ impl Mode {
         }
     } 
 }
+
 
 
 pub struct Graphics {
@@ -68,13 +69,15 @@ impl Graphics {
     }
         
 
+    //TODO combine these two functions into a more generic one 
+
     /* Draws a given line of 8 pixels starting at startx, starty,
      * returns whether a pixel was unset or not */
     pub fn draw_8_pix(&mut self, startx:u8, starty:u8, line:u8) -> bool {
         let mut unset_occured = false;
-        for i in range(0, 8) {
+        for i in range(0u8, 8u8) {
 
-            let x = ((startx + i as u8) as uint) % self.mode.get_width();
+            let x = ((startx + i) as uint) % self.mode.get_width();
             let y = (starty as uint) % self.mode.get_height();
             let pix_state = if (line & (0x80 >> i)) != 0 {true} else {false};
 
@@ -85,6 +88,65 @@ impl Graphics {
         }
        
         return unset_occured;
+    }
+
+    pub fn draw_16_pix(&mut self, startx:u8, starty:u8, line:u16) -> bool {
+        let mut unset_occured = false;
+        for i in range(0u16, 16u16) {
+
+            let x = ((startx as u16 + i) as uint) % self.mode.get_width();
+            let y = (starty as uint) % self.mode.get_height();
+            let pix_state = if (line & (0x8000 >> i)) != 0 {true} else {false};
+            let set = pix_state ^ self.screen[y][x];
+            self.draw_pix(x, y, set);
+            unset_occured = unset_occured || (pix_state && (!set));
+        }
+
+        return unset_occured;
+    }
+
+
+    pub fn scroll_right(&mut self, n:u8) {
+        for y in range(0, self.mode.get_height()) {
+            /*TODO research how to properly use a decreasing
+             * iterator in a range instead of this solution */
+            for x1 in range(-((self.mode.get_width() - 1) as int), - (n as int - 1)) {
+                let x = -x1;
+                let set = self.screen[y][x as uint - n as uint];
+                self.draw_pix(x as uint, y, set);            
+            }
+            for x  in range(0, n as uint) { 
+                self.draw_pix(x as uint, y, false);
+            }
+        }
+    }
+
+    pub fn scroll_left(&mut self, n:u8) {
+        let x_max = self.mode.get_width();
+
+        for y in range(0 , self.mode.get_height()) {
+            for x in range(0, x_max - n as uint) {
+                let set = self.screen[y][x + n as uint];
+                self.draw_pix(x, y, set);
+            }
+            for x in range(x_max - n as uint, x_max) {
+                self.draw_pix(x, y, false);
+            }
+        }
+    }
+
+    pub fn scroll_down(&mut self, n:u8) {
+        let y_max = self.mode.get_height();
+        for x in range(0, self.mode.get_width()) {
+            for y1 in range(-((y_max - 1) as int), - (n as int - 1)) {
+                let y = -y1;
+                let set = self.screen[y as uint - n as uint][x];
+                self.draw_pix(x, y as uint, set);            
+            }
+            for y  in range(0, n as uint) { 
+                self.draw_pix(x, y as uint, false);
+            }
+        }
     }
 
     pub fn clear_screen(&mut self) {

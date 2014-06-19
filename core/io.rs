@@ -6,14 +6,14 @@ static default_keys : [char, ..16] = ['z', 'x', 'c', 'v',
                                           '1', '2', '3', '4'];
 
 pub struct IO {
-    keyboard: sdl_io::IO_impl,
+    keyboard: sdl_io::IOImpl,
     keys : [char, ..16]
 }
 
 impl IO {
 
     pub fn new() -> IO {        
-       IO { keyboard: sdl_io::IO_impl::new(default_keys),
+       IO { keyboard: sdl_io::IOImpl::new(default_keys),
             keys: default_keys }
 
         
