@@ -1,18 +1,18 @@
-CHIP-Rust
-==========
+# SCHIP-Rust
 
-An implementation of a CHIP 8 emulator in Rust, created as an exercise for learning the Rust language.
+An implementation of a CHIP 8 emulator in Rust with extended Super CHIP 8 functionality. 
+Created as an exercise to help me learn the Rust programming language.
 
 
-Dependencies
-===========
+# Dependencies
+
 * SDL 1.2 development libraries
 * Latest Rust version from [master branch](https://github.com/rust-lang/rust)
 
 
 
-Instructions
-============
+# Instructions
+
 If using Windows you will require Cygwin or another tool
 which can execute makefiles.
 
@@ -29,8 +29,8 @@ Running the emulator:
 ./schip [game]
 ```
 
-Keys
-====
+# Keys
+
 
 The following tables show the mappings from the hexidecimal CHIP key layout to an ordinary keyboard layout:
 
@@ -50,8 +50,8 @@ Keyboard Keys:
 |**a**|**s**|**d**|**f**| 
 |**z**|**x**|**c**|**v**| 
 
-Tests
-=====
+# Tests
+
 To run unit tests:
 ```
 $./core_tests
@@ -59,13 +59,17 @@ $./core_tests
 > ***Note*** If running tests ensure environment variable RUST_TEST_TASKS is set to 1 as tests need to be run sequentially.
 
 
-Screenshots
-==========
-CHIP 8 :
-![Invaders](/images/invaders.png?raw=true) ![Pong](/images/pong.png?raw=true)
-Super CHIP 8:
-![Car](/images/car.png?raw=true) ![ANT](/images/ant.png?raw=true)
+# Screenshots
 
-Resources
-========
+CHIP 8:
+
+![Invaders](/images/invaders.png?raw=true)      ![Pong](/images/pong.png?raw=true)
+
+Super CHIP 8:
+
+![Car](/images/car.png?raw=true)      ![ANT](/images/ant.png?raw=true)
+
+
+# Resources
+
 http://www.chip8.com/?page=109 for a collection of free demos and games.
