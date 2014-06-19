@@ -1,5 +1,4 @@
 extern crate graphics_impl;
-use std::bool;
 
 
 static MAX_HORIZONTAL_PIXELS : uint = 128;
@@ -22,13 +21,6 @@ pub enum Mode { CHIP,
 
 impl Mode {
     
-    pub fn get_CHIP() -> Mode {
-        CHIP
-    }
-
-    pub fn get_SCHIP() -> Mode {
-        SCHIP
-    }
 
     fn get_width(&self) -> uint {
         match *self {
@@ -118,13 +110,13 @@ impl Graphics {
         for y in range(0, self.mode.get_height()) {
             /*TODO research how to properly use a decreasing
              * iterator in a range instead of this solution */
-            for x1 in range(-(self.mode.get_width() - 1), - (n as uint - 1)) {
+            for x1 in range(-((self.mode.get_width() - 1) as int), - (n as int - 1)) {
                 let x = -x1;
-                let set = self.screen[x - n as uint][y];
-                self.draw_pix(x, y, set);            
+                let set = self.screen[y][x as uint - n as uint];
+                self.draw_pix(x as uint, y, set);            
             }
             for x  in range(0, n as uint) { 
-                self.draw_pix(x, y, false);
+                self.draw_pix(x as uint, y, false);
             }
         }
     }
@@ -134,7 +126,7 @@ impl Graphics {
 
         for y in range(0 , self.mode.get_height()) {
             for x in range(0, x_max - n as uint) {
-                let set = self.screen[x + n as uint][y];
+                let set = self.screen[y][x + n as uint];
                 self.draw_pix(x, y, set);
             }
             for x in range(x_max - n as uint, x_max) {
@@ -146,13 +138,13 @@ impl Graphics {
     pub fn scroll_down(&mut self, n:u8) {
         let y_max = self.mode.get_height();
         for x in range(0, self.mode.get_width()) {
-            for y in range(0, y_max - n as uint) {
-                let set = self.screen[x][y + n as uint];
-                self.draw_pix(x, y, set);
-            } 
-            
-            for y in range(y_max - n as uint, y_max) {
-                self.draw_pix(x, y, false);
+            for y1 in range(-((y_max - 1) as int), - (n as int - 1)) {
+                let y = -y1;
+                let set = self.screen[y as uint - n as uint][x];
+                self.draw_pix(x, y as uint, set);            
+            }
+            for y  in range(0, n as uint) { 
+                self.draw_pix(x, y as uint, false);
             }
         }
     }

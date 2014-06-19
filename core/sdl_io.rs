@@ -2,12 +2,10 @@ extern crate sdl;
 extern crate libc;
 
 use libc::uint8_t;
-use libc::c_int;
 use std::ptr::RawPtr;
 
-pub struct IO_impl {
+pub struct IOImpl {
     keyboard_state: *uint8_t,
-    size: c_int,
     key_set: [char, ..16]
 }
 
@@ -22,13 +20,13 @@ fn index(keyset:[char, ..16], key:char) -> Option<u8> {
 }
 
 
-impl IO_impl {
+impl IOImpl {
     
-    pub fn new(key_set: [char, ..16]) -> IO_impl {
+    pub fn new(key_set: [char, ..16]) -> IOImpl {
         let a = 0;
-        IO_impl { keyboard_state: unsafe {sdl::event::ll::SDL_GetKeyState(&a)},
+        IOImpl { keyboard_state: unsafe {sdl::event::ll::SDL_GetKeyState(&a)},
                   key_set: key_set,
-                  size :a }
+                }
     }
 
 
