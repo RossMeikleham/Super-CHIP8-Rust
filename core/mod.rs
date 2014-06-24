@@ -7,7 +7,6 @@ pub mod graphics;
 pub mod io;
 /* CPU, Graphics and Memory core */
 
-#[allow(dead_code)]
 
 static MAX_RAM : u16 = 4096;
 static FLAG : uint = 15;
@@ -68,6 +67,7 @@ static sprite_set: [u8, ..(80 + 160)] =
   ]; 
    
 
+#[allow(dead_code)]
 impl CPU {
 
   pub fn new(mem: Vec<u8>) -> CPU {
