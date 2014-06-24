@@ -1,12 +1,6 @@
 extern crate sdl;
-extern crate libc;
 
-use libc::uint8_t;
-//use std::ptr::RawPtr;
-
-pub struct IOImpl {
-    //keyboard_state: *uint8_t,
-    keyboard_state : Vec<(sdl::event::Key, bool)>,
+pub struct IOImpl { 
     key_set: [char, ..16]
 }
 
@@ -25,9 +19,7 @@ impl IOImpl {
     
     pub fn new(key_set: [char, ..16]) -> IOImpl {
         let a = 0;
-        IOImpl { keyboard_state: sdl::event::get_key_state(), //unsafe {sdl::event::ll::SDL_GetKeyState(&a)},
-                  key_set: key_set,
-                }
+        IOImpl {  key_set: key_set}
     }
 
 
@@ -49,15 +41,18 @@ impl IOImpl {
     }
 
 
+    fn is_pressed(keyboard_state : Vec<(sdl::event::Key, bool)>,  key: char) -> bool {
+        for i in keyboard_state.iter() {
+            match *i { 
+                (k, state) if (k as u8) == (key as u8) => return state,
+                 _ => {} };
+            }   
+        false
+    }
+
     pub fn key_pressed(&mut self, key:char) -> bool {
             sdl::event::pump_events(); /* Update current keyboard state */
             let state = sdl::event::get_key_state();
-            match *state.get(key as uint) {
-                (_, val) => val
-            }
-            //unsafe {sdl::event::ll::SDL_PumpEvents(); /* Update keyboard state */
-            //        return *(self.keyboard_state.offset((key as u8) as int)) != 0; 
-            //}
-    } 
- 
+            IOImpl::is_pressed(state, key)
+    }
 }
