@@ -72,38 +72,3 @@ impl Screen {
     }
     
 }
-
-
-
-/*
-  // Note: You'll want to put this and the flip call inside the main loop
-  // but we don't as to not startle epileptics
-  for i in range(0, 10) {
-      for j in range(0, 10) {
-          screen.fill_rect(Some(sdl::Rect {
-              x: (i as i16) * 800 / 10,
-              y: (j as i16) * 600 / 10,
-              w: 800 / 10,
-              h: 600 / 10
-          }), rng.gen::<sdl::video::Color>());
-      }
-  }
-
-  screen.flip();
-
-  'main : loop {
-      'event : loop {
-          match sdl::event::poll_event() {
-              sdl::event::QuitEvent => break 'main,
-              sdl::event::NoEvent => break 'event,
-              sdl::event::KeyEvent(k, _, _, _)
-                  if k == sdl::event::EscapeKey
-                      => break 'main,
-              _ => {}
-          }
-      }
-  }
-
-  sdl::quit();
-}
-*/
