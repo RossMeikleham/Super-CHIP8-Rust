@@ -15,7 +15,7 @@ static FLAG : uint = 15;
 pub struct CPU {
      registers : [u8, ..16], /* 16 8 bit general purpose registers */
      mem : [u8, .. MAX_RAM], /* 4096bytes of memory */
-     I : u16, /* 16 bit index register */
+     index_reg : u16, /* 16 bit index register */
      pc: u16, /* Program counter */
      sp: uint, /* Stack Pointer */
      stack : [u16, ..16], /* 16 stack frames */
@@ -73,7 +73,7 @@ impl CPU {
   pub fn new(mem: Vec<u8>) -> CPU {
         let mut cpu = CPU { registers: [0u8, ..16], 
               mem: [0u8, ..MAX_RAM],
-              I: 0,
+              index_reg: 0,
               pc: 0x200,
               sp: 1,
               stack : [0u16, ..16],
@@ -113,7 +113,7 @@ impl CPU {
    }
 
    pub fn get_index_reg(&self) -> u16 {
-       self.I
+       self.index_reg
    }
      
     /* converts 3 hex digits into a 12 bit address */    
@@ -384,7 +384,7 @@ impl CPU {
 
     /* Set index register to supplied address */
     fn set_i(&mut self, addr:u16) {        
-        self.I = addr;
+        self.index_reg = addr;
     }
 
     /* jump to the supplied address + value in register 0 */
@@ -417,9 +417,10 @@ impl CPU {
      * set the flag register, otherwise unset it */
     fn add_reg_index(&mut self, reg:u8) {
         self.registers[FLAG] = 
-            bool::to_bit::<u8>(0xFFF - (self.registers[reg as uint] as u16) < self.I); 
-        self.I += self.registers[reg as uint] as u16;
-        self.I %= MAX_RAM;
+            bool::to_bit::<u8>(0xFFF - 
+                (self.registers[reg as uint] as u16) < self.index_reg); 
+        self.index_reg += self.registers[reg as uint] as u16;
+        self.index_reg %= MAX_RAM;
     }
 
     /* store the values from register 0 up to and including
@@ -427,7 +428,7 @@ impl CPU {
      * pointed to by the index register */
     fn store_regs(&mut self, max_reg:u8) {
         let regs = self.registers.slice_to(max_reg as uint + 1).iter();
-        let store = self.mem.mut_slice_from(self.I as uint).mut_iter();
+        let store = self.mem.mut_slice_from(self.index_reg as uint).mut_iter();
         /* itterate through both memory and registers*/
         for (mem, reg) in store.zip(regs) {
             *mem = *reg;
@@ -441,7 +442,7 @@ impl CPU {
      * pointed to by the index register */
     fn load_regs(&mut self, max_reg:u8) {
         let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
-        let store = self.mem.slice_from(self.I as uint).iter();
+        let store = self.mem.slice_from(self.index_reg as uint).iter();
         /* itterate through both memory and registers */
         for (mem, reg) in store.zip(regs) {
             *reg = *mem;
@@ -454,9 +455,9 @@ impl CPU {
      * at I + 1, and the LSD at I + 2.*/
     fn binary_decimal(&mut self, reg:u8) {
         let val = self.registers[reg as uint];
-        self.mem[self.I as uint] = val/100;
-        self.mem[(self.I + 1) as uint] = (val % 100)/10;
-        self.mem[(self.I + 2) as uint] = (val % 100)%10;
+        self.mem[self.index_reg as uint] = val/100;
+        self.mem[(self.index_reg + 1) as uint] = (val % 100)/10;
+        self.mem[(self.index_reg + 2) as uint] = (val % 100)%10;
  
     }
     
@@ -471,7 +472,7 @@ impl CPU {
             if self.graphics.draw_8_pix(
                     self.registers[x as uint], 
                     self.registers[y as uint] + i,  
-                    self.mem[(self.I + (i as u16)) as uint]) {
+                    self.mem[(self.index_reg + (i as u16)) as uint]) {
 
                 self.registers[FLAG] = 1;
             }
@@ -482,7 +483,7 @@ impl CPU {
 
     /* set I reg to sprite number stored in the given register */
     fn load_sprite(&mut self, reg:u8) {
-        self.I = (5 * self.registers[reg as uint]) as u16;
+        self.index_reg = (5 * self.registers[reg as uint]) as u16;
     }
 
     /* Wait for a keypress and set the contents of the
@@ -545,8 +546,8 @@ impl CPU {
         self.registers[FLAG] = 0;
 
         for y in range(0u, 16u) {
-            let line = (self.mem[self.I as uint + (2 * y)] as u16 << 4) 
-                | (self.mem[self.I as uint + (2 * y) + 1] as u16);
+            let line = (self.mem[self.index_reg as uint + (2 * y)] as u16 << 4) 
+                | (self.mem[self.index_reg as uint + (2 * y) + 1] as u16);
             if self.graphics.draw_16_pix(self.registers[start_x as uint], self.registers[start_y as uint] + y as u8, line) {
                 self.registers[FLAG] = 1;
             }
@@ -557,7 +558,7 @@ impl CPU {
 
     /* load extended sprite 4x10 pixels */
     fn load_extended_sprite(&mut self, reg:u8) {
-        self.I = (0x50 + (0xA * self.registers[reg as uint])) as u16;
+        self.index_reg = (0x50 + (0xA * self.registers[reg as uint])) as u16;
     }
 
     fn store_hp_regs(&mut self, max_reg:u8) {

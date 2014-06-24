@@ -5,12 +5,11 @@ pub struct IOImpl {
 }
 
 fn index(keyset:[char, ..16], key:char) -> Option<u8> {
-    for i in range(0u, keyset.len()) {
-        if keyset[i] == key {
-            return Some(i as u8);
-    }      
+    for i in keyset.iter() {
+        if *i == key {
+            return Some(*i as u8);
+        }      
     }   
-
     None
 }
 
@@ -18,7 +17,6 @@ fn index(keyset:[char, ..16], key:char) -> Option<u8> {
 impl IOImpl {
     
     pub fn new(key_set: [char, ..16]) -> IOImpl {
-        let a = 0;
         IOImpl {  key_set: key_set}
     }
 
