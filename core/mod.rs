@@ -472,7 +472,6 @@ impl CPU {
 
             let line = self.mem[(self.index_reg + (i as u16)) as uint];
 
-        print!("line {:u}", line);
             if self.graphics.draw_line(
                     self.registers[x as uint], 
                     self.registers[y as uint] + i,  

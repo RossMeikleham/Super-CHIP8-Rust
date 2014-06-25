@@ -66,7 +66,6 @@ impl Graphics {
 
     pub fn draw_pix(&mut self, x:uint, y:uint, state:bool) {
         self.screen[y][x] = state;
-        self.out.draw_pix(x as int, y as int, state);
     }
 
 
@@ -113,39 +112,6 @@ impl Graphics {
         return and_true_states.len() > 0       
    }
        
-
-    /* Draws a given line of 8 pixels starting at startx, starty,
-     * returns whether a pixel was unset or not */
-    pub fn draw_8_pix(&mut self, startx:u8, starty:u8, line:u8) -> bool {
-        let mut unset_occured = false;
-        for i in range(0u8, 8u8) {
-
-            let x = ((startx + i) as uint) % self.mode.get_width();
-            let y = (starty as uint) % self.mode.get_height();
-            let pix_state = if (line & (0x80 >> i)) != 0 {true} else {false};
-
-            /* get set value of current pixel in line */
-            let set = pix_state ^ self.screen[y][x];
-            //self.draw_pix(x, y, set);  
-            unset_occured = unset_occured || (pix_state && (!set)); 
-        }
-        return unset_occured;
-    }
-
-    pub fn draw_16_pix(&mut self, startx:u8, starty:u8, line:u16) -> bool {
-        let mut unset_occured = false;
-        for i in range(0u16, 16u16) {
-
-            let x = ((startx as u16 + i) as uint) % self.mode.get_width();
-            let y = (starty as uint) % self.mode.get_height();
-            let pix_state = if (line & (0x8000 >> i)) != 0 {true} else {false};
-            let set = pix_state ^ self.screen[y][x];
-            //self.draw_pix(x, y, set);
-            unset_occured = unset_occured || (pix_state && (!set));
-        }
-
-        return unset_occured;
-    }
 
 
     pub fn scroll_right(&mut self, n:u8) {
@@ -209,8 +175,3 @@ impl Graphics {
         self.out.show();
     }
 }
-
-
-
-
-
