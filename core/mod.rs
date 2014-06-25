@@ -469,10 +469,14 @@ impl CPU {
         self.registers[FLAG] = 0;
         let n = if line_count == 0 {16} else {line_count};
         for i in range(0, n) {
-            if self.graphics.draw_8_pix(
+
+            let line = self.mem[(self.index_reg + (i as u16)) as uint];
+
+        print!("line {:u}", line);
+            if self.graphics.draw_line(
                     self.registers[x as uint], 
                     self.registers[y as uint] + i,  
-                    self.mem[(self.index_reg + (i as u16)) as uint]) {
+                    line) {
 
                 self.registers[FLAG] = 1;
             }
@@ -548,7 +552,11 @@ impl CPU {
         for y in range(0u, 16u) {
             let line = (self.mem[self.index_reg as uint + (2 * y)] as u16 << 4) 
                 | (self.mem[self.index_reg as uint + (2 * y) + 1] as u16);
-            if self.graphics.draw_16_pix(self.registers[start_x as uint], self.registers[start_y as uint] + y as u8, line) {
+            if self.graphics.draw_line(
+                    self.registers[start_x as uint], 
+                    self.registers[start_y as uint] + y as u8, 
+                    line) 
+                {
                 self.registers[FLAG] = 1;
             }
         }

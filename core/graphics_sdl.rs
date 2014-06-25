@@ -67,7 +67,8 @@ impl Screen {
     }
 
 
-    pub fn show(&self) {
+    pub fn show(&mut self) {
+        
         self.surface.flip();
     }
     

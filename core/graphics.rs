@@ -1,5 +1,6 @@
 extern crate graphics_impl;
 
+use std::num::Bounded;
 
 static MAX_HORIZONTAL_PIXELS : uint = 128;
 static MAX_VERTICAL_PIXELS : uint = 64;
@@ -63,13 +64,55 @@ impl Graphics {
     }
     
 
-    pub fn draw_pix(&mut self, x:uint, y:uint, set:bool) {
-        self.screen[y][x] = set;
-        self.out.draw_pix(x as int, y as int, set);
+    pub fn draw_pix(&mut self, x:uint, y:uint, state:bool) {
+        self.screen[y][x] = state;
+        self.out.draw_pix(x as int, y as int, state);
     }
-        
 
-    //TODO combine these two functions into a more generic one 
+
+
+    fn to_bit_vec<N: Unsigned + Int>(num :N) -> Vec<u8> {
+        let max : N = Bounded::max_value();
+
+        let max_u = match max.to_uint() {
+            Some(val) => val,
+            None => fail!("cannot convert num to uint")
+        };
+
+        let bit_count = max_u.count_ones();
+        let largest_bit = max_u - (max_u >> 1);
+
+        let num_u = match num.to_uint() {
+            Some(val) => val,
+            None => fail!("cannot convert num to uint")
+        };
+        Vec::from_fn(bit_count, 
+            |idx| if num_u & (largest_bit >> idx ) != 0 {1u8} else {0u8} )            
+    }
+
+
+    
+    pub fn draw_line<N: Unsigned + Int>(&mut self, startx:u8, starty:u8, line:N) -> bool {       
+      
+       let  pixel_states :Vec<bool>  = Graphics::to_bit_vec(line)
+                       .iter()
+                       .map(|&x| if x == 0 {false} else {true})
+                       .collect();
+      
+        let current_states = self.screen[starty as uint]
+                        .mut_slice_from(startx as uint);
+        
+        let mut zipped_states = current_states.mut_iter().zip(pixel_states.iter());
+        /* Set pixel to old pixel xor new pixel */
+        for (old, new) in zipped_states { *old = *old ^ *new;}
+         
+        /* Rust's type inference sucks at the moment :/ */
+        let and_true_states: Vec<(&mut bool, &bool)> = 
+            zipped_states.filter(|&(&old, &new)| old && new == true).collect();
+        /* If any of old and new pixels were both true then a pixel was unset */                    
+        return and_true_states.len() > 0       
+   }
+       
 
     /* Draws a given line of 8 pixels starting at startx, starty,
      * returns whether a pixel was unset or not */
@@ -83,10 +126,9 @@ impl Graphics {
 
             /* get set value of current pixel in line */
             let set = pix_state ^ self.screen[y][x];
-            self.draw_pix(x, y, set);  
+            //self.draw_pix(x, y, set);  
             unset_occured = unset_occured || (pix_state && (!set)); 
         }
-       
         return unset_occured;
     }
 
@@ -98,7 +140,7 @@ impl Graphics {
             let y = (starty as uint) % self.mode.get_height();
             let pix_state = if (line & (0x8000 >> i)) != 0 {true} else {false};
             let set = pix_state ^ self.screen[y][x];
-            self.draw_pix(x, y, set);
+            //self.draw_pix(x, y, set);
             unset_occured = unset_occured || (pix_state && (!set));
         }
 
@@ -158,8 +200,17 @@ impl Graphics {
         self.out.clear_screen();
     }
 
-    pub fn show(&self) {
+    pub fn show(&mut self) {
+        for y in range(0, MAX_VERTICAL_PIXELS) {
+            for x in range(0, MAX_HORIZONTAL_PIXELS) {
+                self.out.draw_pix(x as int, y as int, self.screen[y][x]);
+            }
+        }
         self.out.show();
     }
 }
+
+
+
+
 
