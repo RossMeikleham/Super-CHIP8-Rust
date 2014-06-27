@@ -1,6 +1,7 @@
 extern crate graphics_impl;
 
 use std::num::Bounded;
+use std::iter::range_step;
 
 static MAX_HORIZONTAL_PIXELS : uint = 128;
 static MAX_VERTICAL_PIXELS : uint = 64;
@@ -69,7 +70,8 @@ impl Graphics {
     }
 
 
-
+    /* Create a bit vector for the supplied number from
+     * MS bit to LS bit */
     fn to_bit_vec<N: Unsigned + Int>(num :N) -> Vec<u8> {
         let max : N = Bounded::max_value();
 
@@ -115,29 +117,27 @@ impl Graphics {
 
 
     pub fn scroll_right(&mut self, n:u8) {
+        let n = n as uint;
         for y in range(0, self.mode.get_height()) {
-            /*TODO research how to properly use a decreasing
-             * iterator in a range instead of this solution */
-            for x1 in range(-((self.mode.get_width() - 1) as int), - (n as int - 1)) {
-                let x = -x1;
-                let set = self.screen[y][x as uint - n as uint];
-                self.draw_pix(x as uint, y, set);            
+            for x in range_step(self.mode.get_width() - 1, n  - 1, -1) {
+                let set = self.screen[y][x - n];
+                self.draw_pix(x, y, set);            
             }
-            for x  in range(0, n as uint) { 
-                self.draw_pix(x as uint, y, false);
+            for x  in range(0, n) { 
+                self.draw_pix(x, y, false);
             }
         }
     }
 
     pub fn scroll_left(&mut self, n:u8) {
         let x_max = self.mode.get_width();
-
+        let n = n as uint;
         for y in range(0 , self.mode.get_height()) {
-            for x in range(0, x_max - n as uint) {
-                let set = self.screen[y][x + n as uint];
+            for x in range(0, x_max - n) {
+                let set = self.screen[y][x + n];
                 self.draw_pix(x, y, set);
             }
-            for x in range(x_max - n as uint, x_max) {
+            for x in range(x_max - n, x_max) {
                 self.draw_pix(x, y, false);
             }
         }
@@ -145,14 +145,14 @@ impl Graphics {
 
     pub fn scroll_down(&mut self, n:u8) {
         let y_max = self.mode.get_height();
+        let n = n as uint;
         for x in range(0, self.mode.get_width()) {
-            for y1 in range(-((y_max - 1) as int), - (n as int - 1)) {
-                let y = -y1;
-                let set = self.screen[y as uint - n as uint][x];
-                self.draw_pix(x, y as uint, set);            
+            for y in range_step(y_max - 1, n - 1, -1) {                
+                let set = self.screen[y - n][x];
+                self.draw_pix(x, y, set);            
             }
-            for y  in range(0, n as uint) { 
-                self.draw_pix(x, y as uint, false);
+            for y  in range(0, n) { 
+                self.draw_pix(x, y, false);
             }
         }
     }
@@ -165,7 +165,8 @@ impl Graphics {
         }
         self.out.clear_screen();
     }
-
+    
+    //TODO improve as iinefficient (causes redrawing of entire screen)
     pub fn show(&mut self) {
         for y in range(0, MAX_VERTICAL_PIXELS) {
             for x in range(0, MAX_HORIZONTAL_PIXELS) {
