@@ -348,7 +348,7 @@ impl CPU {
         let register1 = self.registers[reg1 as uint];
         let register2 = self.registers[reg2 as uint];
         self.registers[FLAG] =  
-            match 0xFF - register1 < register2 { true => 1, false => 0};
+            match (0xFF - register1) < register2 { true => 1, false => 0};
         self.registers[reg1 as uint] += register2;  
     }
 
@@ -418,7 +418,7 @@ impl CPU {
     fn add_reg_index(&mut self, reg:u8) {
         let reg = reg as uint;
         self.registers[FLAG] = 
-            match 0xFFF - (self.registers[reg] as u16) < self.index_reg {
+            match (0xFFF - (self.registers[reg] as u16)) < self.index_reg {
                 true => 1,
                 false => 0
             }; 

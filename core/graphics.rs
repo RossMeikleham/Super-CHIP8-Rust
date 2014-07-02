@@ -95,6 +95,8 @@ impl Graphics {
     
     pub fn draw_line<N: Unsigned + Int>(&mut self, startx:u8, starty:u8, line:N) -> bool {       
       
+       let mut unset_occured = false;
+
        let  pixel_states :Vec<bool>  = Graphics::to_bit_vec(line)
                        .iter()
                        .map(|&x| if x == 0 {false} else {true})
@@ -105,13 +107,14 @@ impl Graphics {
         
         let mut zipped_states = current_states.mut_iter().zip(pixel_states.iter());
         /* Set pixel to old pixel xor new pixel */
-        for (old, new) in zipped_states { *old = *old ^ *new;}
-         
-        /* Rust's type inference sucks at the moment :/ */
-        let and_true_states: Vec<(&mut bool, &bool)> = 
-            zipped_states.filter(|&(&old, &new)| old && new == true).collect();
-        /* If any of old and new pixels were both true then a pixel was unset */                    
-        return and_true_states.len() > 0       
+        for (old, new) in zipped_states { 
+            if !unset_occured && *old == true && *new == true {
+                unset_occured = true;
+            } 
+            *old = *old ^ *new; 
+        }
+
+        return unset_occured;;
    }
        
 
