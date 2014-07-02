@@ -1,5 +1,4 @@
 use std::rand::random;
-use std::bool;
 use core::graphics::Graphics; 
 use core::graphics::Mode;
 use core::io::IO;
@@ -72,7 +71,7 @@ impl CPU {
 
   pub fn new(mem: Vec<u8>) -> CPU {
         let mut cpu = CPU { registers: [0u8, ..16], 
-              mem: [0u8, ..MAX_RAM],
+              mem: [0u8, ..(MAX_RAM as uint)],
               index_reg: 0,
               pc: 0x200,
               sp: 1,
@@ -349,7 +348,7 @@ impl CPU {
         let register1 = self.registers[reg1 as uint];
         let register2 = self.registers[reg2 as uint];
         self.registers[FLAG] =  
-            bool::to_bit::<u8>(0xFF - register1 < register2);
+            match 0xFF - register1 < register2 { true => 1, false => 0};
         self.registers[reg1 as uint] += register2;  
     }
 
@@ -362,7 +361,8 @@ impl CPU {
         let register1 = self.registers[reg1 as uint];
         let register2 = self.registers[reg2 as uint];
         
-        self.registers[FLAG] = bool::to_bit::<u8>(register2 < register1);
+        self.registers[FLAG] = 
+            match register2 < register1 { true => 1, false => 0};
         self.registers[store_reg as uint] = register1 -  register2;
     }
 
@@ -416,10 +416,13 @@ impl CPU {
      * the result in the index register. If this operation causes overflow
      * set the flag register, otherwise unset it */
     fn add_reg_index(&mut self, reg:u8) {
+        let reg = reg as uint;
         self.registers[FLAG] = 
-            bool::to_bit::<u8>(0xFFF - 
-                (self.registers[reg as uint] as u16) < self.index_reg); 
-        self.index_reg += self.registers[reg as uint] as u16;
+            match 0xFFF - (self.registers[reg] as u16) < self.index_reg {
+                true => 1,
+                false => 0
+            }; 
+        self.index_reg += self.registers[reg] as u16;
         self.index_reg %= MAX_RAM;
     }
 

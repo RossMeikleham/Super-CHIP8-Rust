@@ -82,7 +82,7 @@ fn check_sub_regs_overflow() {
     cpu.interpret(0x8795); /* sub r9 from r7 store result in r7 */
 
     assert_eq!(cpu.get_reg(0xF), 0x0); /* check overflow */
-    assert_eq!(cpu.get_reg(0x7), (0x12 - 0x20) as u8);
+    assert_eq!(cpu.get_reg(0x7), 0x12 - 0x20 as u8);
 
 }
 
@@ -116,7 +116,7 @@ fn check_sub_inverted_regs_overflow() {
     cpu.interpret(0x8CE7);
 
     assert_eq!(cpu.get_reg(0xF), 0x0);
-    assert_eq!(cpu.get_reg(0xC), (0x30 - 0xD3) as u8); 
+    assert_eq!(cpu.get_reg(0xC), 0x30 - 0xD3 as u8); 
 }
 
 
