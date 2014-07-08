@@ -1,4 +1,4 @@
-#![crate_id = "graphics_impl"]
+#![crate_name = "graphics_impl"]
 extern crate sdl;
 
 pub struct Screen {
