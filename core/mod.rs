@@ -12,7 +12,7 @@ static FLAG : uint = 15;
 
 pub struct CPU {
      registers : [u8, ..16], /* 16 8 bit general purpose registers */
-     mem : [u8, .. MAX_RAM], /* 4096bytes of memory */
+     mem : [u8, .. MAX_RAM as uint], /* 4096bytes of memory */
      index_reg : u16, /* 16 bit index register */
      pc: u16, /* Program counter */
      sp: uint, /* Stack Pointer */
