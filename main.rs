@@ -5,6 +5,7 @@ use std::string::String;
 use std::os;
 use core::CPU;
 use std::io::timer;
+use std::time::duration::Duration;
 
 mod core;
 
@@ -48,7 +49,7 @@ fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
         let expired_ns = current_time - old_time;    
         let overall_duration_ns = (1000000000 * instructions)/ins_per_sec; /*Calculate duration instruction should take */
         if overall_duration_ns > expired_ns { /* ensure that duration has expired until next cycles begin */
-            timer::sleep((overall_duration_ns - expired_ns)/1000000);            
+            timer::sleep(Duration::nanoseconds((overall_duration_ns - expired_ns) as i64));            
        }
     } 
 }
