@@ -3,8 +3,8 @@ extern crate graphics_impl;
 use std::num::Bounded;
 use std::iter::range_step;
 
-static MAX_HORIZONTAL_PIXELS : uint = 128;
-static MAX_VERTICAL_PIXELS : uint = 64;
+const MAX_HORIZONTAL_PIXELS : uint = 128;
+const MAX_VERTICAL_PIXELS : uint = 64;
 
 
 struct Dimensions {

@@ -7,8 +7,8 @@ pub mod io;
 /* CPU, Graphics and Memory core */
 
 
-static MAX_RAM : u16 = 4096;
-static FLAG : uint = 15;
+const MAX_RAM : u16 = 4096;
+const FLAG : uint = 15;
 
 pub struct CPU {
      registers : [u8, ..16], /* 16 8 bit general purpose registers */
