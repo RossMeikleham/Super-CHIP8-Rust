@@ -8,25 +8,23 @@ Created as an exercise to help me learn the Rust programming language.
 
 * SDL 1.2 development libraries
 * Latest Rust version from [master branch](https://github.com/rust-lang/rust)
+* Cargo (Rust Package Manager)
 
 
 
 # Instructions
 
-If using Windows you will require Cygwin or another tool
-which can execute makefiles.
-
 To download and build:
 ```
-git clone https://github.com/RossMeikleham/SCHIP-Rust.git
-cd SCHIP-Rust
+git clone https://github.com/RossMeikleham/Super-CHIP8-Rust.git
+cd Super-CHIP8-Rust
 git submodule update --init
-make
+cargo build
 ```
 
 Running the emulator:
 ```
-./schip [game]
+./schip8 [game]
 ```
 
 # Keys
@@ -54,7 +52,7 @@ Keyboard Keys:
 
 To run unit tests:
 ```
-$./core_tests
+cargo test
 ```
 > ***Note*** If running tests ensure environment variable RUST_TEST_TASKS is set to 1 as tests need to be run sequentially.
 
