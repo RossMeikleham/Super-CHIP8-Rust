@@ -16,8 +16,8 @@ Created as an exercise to help me learn the Rust programming language.
 
 To download and build:
 ```
-git clone https://github.com/RossMeikleham/SCHIP-Rust.git
-cd SCHIP-Rust
+git clone https://github.com/RossMeikleham/Super-CHIP8-Rust.git
+cd Super-CHIP8-Rust
 git submodule update --init
 cargo build
 ```
