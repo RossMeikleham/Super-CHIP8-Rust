@@ -1,6 +1,6 @@
-extern crate sdl_io;
+pub mod sdl_io;
 
-static default_keys : [char, ..16] = ['z', 'x', 'c', 'v',
+static DEFAULT_KEYS : [char, ..16] = ['z', 'x', 'c', 'v',
                                           'a', 's', 'd', 'f',
                                           'q', 'w', 'e', 'r',
                                           '1', '2', '3', '4'];
@@ -13,8 +13,8 @@ pub struct IO {
 impl IO {
 
     pub fn new() -> IO {        
-       IO { keyboard: sdl_io::IOImpl::new(default_keys),
-            keys: default_keys }
+       IO { keyboard: sdl_io::IOImpl::new(DEFAULT_KEYS),
+            keys: DEFAULT_KEYS }
 
         
     }

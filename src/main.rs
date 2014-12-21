@@ -3,11 +3,11 @@ extern crate time;
 use std::io::File; /* input/output */
 use std::string::String;
 use std::os;
-use core::CPU;
+use system::CPU;
 use std::io::timer;
 use std::time::duration::Duration;
 
-mod core;
+mod system;
 
 static MAX_RAM : uint = 0x1000;
 static START_RAM :uint = 0x200;
@@ -26,7 +26,7 @@ fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
             /* Programs start at address 0x200, in original implementation
              * 0x000 - 0x1FF reserved for VM, just pad start of mem with 
              * 0s in this case */
-            let mem = Vec::from_elem(START_RAM, 0u8) + rom_contents;
+            let mem = Vec::from_elem(START_RAM, 0u8) + rom_contents.as_slice();
             let size = mem.len();
 
             if size <= MAX_RAM { 
@@ -55,7 +55,7 @@ fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
 }
 
 
-fn run_program(mut chip8 :core::CPU, cycle_max: u64, ins_per_sec: u64)  {
+fn run_program(mut chip8 :system::CPU, cycle_max: u64, ins_per_sec: u64)  {
     
     'run : loop {
         let start_timer = time::precise_time_ns();
@@ -76,17 +76,17 @@ fn main() {
    
    let file_name = match args.remove(1)  {
        Some(name) => name,
-       None => fail!("No file name specified")
+       None => panic!("No file name specified")
    };
 
     let memory = match read_rom(file_name) {
         Ok(mem) => mem,
-        Err(e) => fail!("{}",e)
+        Err(e) => panic!("{}",e)
     };
     
     assert!(memory.len() <=  MAX_RAM);
 
-    run_program(core::CPU::new(memory), CYCLES_CHECK, INSTRUCTIONS_PER_SEC);
+    run_program(system::CPU::new(memory), CYCLES_CHECK, INSTRUCTIONS_PER_SEC);
 }
 
 

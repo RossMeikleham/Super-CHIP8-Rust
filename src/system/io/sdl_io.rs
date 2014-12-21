@@ -25,8 +25,12 @@ impl IOImpl {
     pub fn get_key(&mut self) -> u8 {
         'key_loop : loop {
             match sdl::event::wait_event() {
-            sdl::event::KeyEvent(k , _, _, _) =>  {
-                match index(self.key_set, ((k as u8) as char)) {
+            sdl::event::Event::Key(k, _, _, _) =>  {
+                if k as uint == sdl::event::Key::Escape as uint {
+                    panic!("Exited program");
+                }
+                else {println!("pressed {}", k as uint);}
+                match index(self.key_set, (k as u8) as char) {
                     Some(index) => { return index;},
                     None => {}
                 }; 
@@ -41,6 +45,10 @@ impl IOImpl {
 
     fn is_pressed(keyboard_state : Vec<(sdl::event::Key, bool)>,  key: char) -> bool {
         for i in keyboard_state.iter() {
+           let (k, state) = *i;
+           if (k as u8) == sdl::event::Key::Escape as u8 && state {
+                panic!("Exited Program");
+            }
             match *i { 
                 (k, state) if (k as u8) == (key as u8) => return state,
                  _ => {} };

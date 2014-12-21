@@ -1,7 +1,6 @@
-extern crate graphics_impl;
-
-use std::num::Bounded;
 use std::iter::range_step;
+
+pub mod graphics_sdl;
 
 const MAX_HORIZONTAL_PIXELS : uint = 128;
 const MAX_VERTICAL_PIXELS : uint = 64;
@@ -12,56 +11,48 @@ struct Dimensions {
     height: uint
 }
 
-static SCHIP_dimensions :Dimensions = Dimensions{ width: 128, height: 64};
-static  CHIP_dimensions :Dimensions = Dimensions{ width: 64,  height: 32};  
+static SCHIP_DIMENSIONS :Dimensions = Dimensions{ width: 128, height: 64};
+static  CHIP_DIMENSIONS :Dimensions = Dimensions{ width: 64,  height: 32};  
 
 
-/* Either CHIP or Super CHIP mode */
-pub enum Mode { CHIP,
-                SCHIP}
-
-
-impl Mode {
-    
-
-    fn get_width(&self) -> uint {
-        match *self {
-            CHIP => CHIP_dimensions.width,
-            SCHIP => SCHIP_dimensions.width
-        }
+// Enums are uncopyable wtf, now completely useless >.>
+// Use bools instead to check CHIP or SCHIP mode
+fn get_width(mode : bool) -> uint { 
+    match mode {
+        false => CHIP_DIMENSIONS.width,
+        true => SCHIP_DIMENSIONS.width
     }
-    
-    fn get_height(&self) -> uint {
-        match *self {
-            CHIP  =>  CHIP_dimensions.width,
-            SCHIP => SCHIP_dimensions.height
-        }
-    } 
+}
+
+fn get_height(mode : bool) -> uint { 
+    match mode {
+        false => CHIP_DIMENSIONS.height,
+        true => SCHIP_DIMENSIONS.height
+    }
 }
 
 
-
 pub struct Graphics {
-    mode :Mode,
+    mode :bool,
     screen : [[bool, ..MAX_HORIZONTAL_PIXELS], ..MAX_VERTICAL_PIXELS],
-    out : graphics_impl::Screen
+    out : graphics_sdl::Screen
 }
 
 impl Graphics {
 
     pub fn new() -> Graphics {
-        Graphics { mode: CHIP,
+        Graphics { mode: false,
                    /* Initialize all pixels to blank */
                    screen: [[false, ..MAX_HORIZONTAL_PIXELS], ..MAX_VERTICAL_PIXELS],
-                   out: graphics_impl::Screen::new(256, 128, 
-                    CHIP_dimensions.width, CHIP_dimensions.height)
+                   out: graphics_sdl::Screen::new(256, 128, 
+                    CHIP_DIMENSIONS.width, CHIP_DIMENSIONS.height)
          }
     }
 
-    pub fn set_mode(&mut self, mode:Mode) { 
-        self.mode = mode;
-        self.out.set_x_max(mode.get_width());
-        self.out.set_y_max(mode.get_height());
+    pub fn set_mode(&mut self, new_mode:bool) { 
+        self.mode = new_mode;
+        self.out.set_x_max(get_width(new_mode));
+        self.out.set_y_max(get_height(new_mode));
     }
     
 
@@ -72,40 +63,29 @@ impl Graphics {
 
     /* Create a bit vector for the supplied number from
      * MS bit to LS bit */
-    fn to_bit_vec<N: Unsigned + Int>(num :N) -> Vec<u8> {
-        let max : N = Bounded::max_value();
+    fn to_bit_vec(n:uint, bit_count:uint) -> Vec<u8> {
+              
+        let largest_bit : uint = 1 << (bit_count - 1); 
 
-        let max_u = match max.to_uint() {
-            Some(val) => val,
-            None => fail!("cannot convert num to uint")
-        };
-
-        let bit_count = max_u.count_ones();
-        let largest_bit = max_u - (max_u >> 1);
-
-        let num_u = match num.to_uint() {
-            Some(val) => val,
-            None => fail!("cannot convert num to uint")
-        };
         Vec::from_fn(bit_count, 
-            |idx| if num_u & (largest_bit >> idx ) != 0 {1u8} else {0u8} )            
+            |idx| if n & (largest_bit >> idx ) != 0 {1u8} else {0u8} )            
     }
 
 
     
-    pub fn draw_line<N: Unsigned + Int>(&mut self, startx:u8, starty:u8, line:N) -> bool {       
+    pub fn draw_line(&mut self, startx:u8, starty:u8, line:uint, bits:uint) -> bool {       
       
        let mut unset_occured = false;
 
-       let  pixel_states :Vec<bool>  = Graphics::to_bit_vec(line)
+       let  pixel_states :Vec<bool>  = Graphics::to_bit_vec(line, bits)
                        .iter()
                        .map(|&x| if x == 0 {false} else {true})
                        .collect();
       
         let current_states = self.screen[starty as uint]
-                        .mut_slice_from(startx as uint);
+                        .slice_from_mut(startx as uint);
         
-        let mut zipped_states = current_states.mut_iter().zip(pixel_states.iter());
+        let mut zipped_states = current_states.iter_mut().zip(pixel_states.iter());
         /* Set pixel to old pixel xor new pixel */
         for (old, new) in zipped_states { 
             if !unset_occured && *old == true && *new == true {
@@ -121,8 +101,8 @@ impl Graphics {
 
     pub fn scroll_right(&mut self, n:u8) {
         let n = n as uint;
-        for y in range(0, self.mode.get_height()) {
-            for x in range_step(self.mode.get_width() - 1, n  - 1, -1) {
+        for y in range(0, get_height(self.mode)) {
+            for x in range_step(get_width(self.mode) - 1, n  - 1, -1) {
                 let set = self.screen[y][x - n];
                 self.draw_pix(x, y, set);            
             }
@@ -133,9 +113,9 @@ impl Graphics {
     }
 
     pub fn scroll_left(&mut self, n:u8) {
-        let x_max = self.mode.get_width();
+        let x_max = get_width(self.mode);
         let n = n as uint;
-        for y in range(0 , self.mode.get_height()) {
+        for y in range(0 , get_height(self.mode)) {
             for x in range(0, x_max - n) {
                 let set = self.screen[y][x + n];
                 self.draw_pix(x, y, set);
@@ -147,9 +127,9 @@ impl Graphics {
     }
 
     pub fn scroll_down(&mut self, n:u8) {
-        let y_max = self.mode.get_height();
+        let y_max = get_height(self.mode);
         let n = n as uint;
-        for x in range(0, self.mode.get_width()) {
+        for x in range(0, get_width(self.mode)) {
             for y in range_step(y_max - 1, n - 1, -1) {                
                 let set = self.screen[y - n][x];
                 self.draw_pix(x, y, set);            

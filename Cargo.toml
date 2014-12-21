@@ -1,0 +1,21 @@
+[package]
+name = "Super CHIP8"
+version = "0.0.1"
+authors = [
+	"RossMeikleham <rossmeikleham@hotmail.co.uk>",
+]
+
+description = "CHIP8 emulator with Super CHIP8 functionality"
+homepage = "https://github.com/RossMeikleham/Super-CHIP8-Rust"
+repository = "https://github.com/RossMeikleham/Super-CHIP8-Rust"
+license = "MIT"
+
+[[bin]]
+name = "schip8"
+path = "src/main.rs"
+
+[dependencies]
+time = "*"
+
+[dependencies.sdl]
+path = "rust-sdl"

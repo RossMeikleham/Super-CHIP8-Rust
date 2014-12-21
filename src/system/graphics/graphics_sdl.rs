@@ -1,5 +1,7 @@
-#![crate_name = "graphics_impl"]
+
 extern crate sdl;
+
+use self::sdl::video::{SurfaceFlag, VideoFlag};
 
 pub struct Screen {
     surface :sdl::video::Surface,
@@ -15,15 +17,16 @@ pub struct Screen {
 impl Screen {
 
     pub fn new(width :int, height :int, x_max :uint, y_max :uint) -> Screen {
-        sdl::init([sdl::InitVideo]);
+        sdl::init([sdl::InitFlag::Video].as_slice());     
         sdl::wm::set_caption("CHIP-8 Emulator", "sdl");  
-        
-        let surface =   
-            match sdl::video::set_video_mode(width, height, 32, 
-            [sdl::video::HWSurface], [sdl::video::DoubleBuf]) {
+
+        let surface = 
+            match sdl::video::set_video_mode(width, height, 32,
+                  [SurfaceFlag::HWSurface].as_slice(),
+                  [VideoFlag::DoubleBuf].as_slice()) {
                 
                 Ok(screen) => screen,
-                Err(err) => fail!("failed to set video mode: {}", err)
+                Err(err) => panic!("failed to set video mode: {}", err)
             };
 
         Screen { surface:surface, 

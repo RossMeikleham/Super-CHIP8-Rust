@@ -1,7 +1,7 @@
 use std::rand::random;
-use core::graphics::Graphics; 
-use core::graphics::Mode;
-use core::io::IO;
+//use graphics::Graphics; 
+//use core::graphics::Mode;
+//use io::IO;
 pub mod graphics;
 pub mod io;
 /* CPU, Graphics and Memory core */
@@ -9,6 +9,8 @@ pub mod io;
 
 const MAX_RAM : u16 = 4096;
 const FLAG : uint = 15;
+const CHIP_MODE : bool = false;
+const SCHIP_MODE : bool = false;
 
 pub struct CPU {
      registers : [u8, ..16], /* 16 8 bit general purpose registers */
@@ -20,15 +22,15 @@ pub struct CPU {
      sound_timer : u8, 
      delay_timer : u8,
      hp_48_flags: [u8, ..8], /*SCHIP */
-     graphics :Graphics,
-     io :IO,
+     graphics :graphics::Graphics,
+     io :io::IO,
      halt:bool,
-     mode:Mode
+     mode: bool
 
 }
 
 
-static sprite_set: [u8, ..(80 + 160)] =   
+static SPRITE_SET: [u8, ..(80 + 160)] =   
    [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -79,20 +81,20 @@ impl CPU {
               sound_timer: 0,
               delay_timer: 0,
               hp_48_flags: [0u8, ..8],
-              graphics : Graphics::new(),
-              io : IO::new(),
+              graphics : graphics::Graphics::new(),
+              io : io::IO::new(),
               halt:false,
-              mode:graphics::CHIP 
+              mode:CHIP_MODE 
        };
         
        
        /* Fill up emulator emu values with supplied memory */
-       for (m, v) in cpu.mem.mut_iter().zip(mem.iter()) {
+       for (m, v) in cpu.mem.iter_mut().zip(mem.iter()) {
            *m = *v;
        }
       
        /* Load CHIP8 fontset into unused locations 0x0 - 0x50 in memory */ 
-       for (m, v) in cpu.mem.mut_iter().zip(sprite_set.iter()) {
+       for (m, v) in cpu.mem.iter_mut().zip(SPRITE_SET.iter()) {
             *m = *v;
        }
 
@@ -152,13 +154,14 @@ impl CPU {
             (0x0, 0x0, 0xE, 0xE) => self.ret(), 
            
             (0x0, a, b, c) => {
-                match (self.mode, (a, b, c)) {
-                    (graphics::SCHIP, (0x0, 0xC, n)) => self.scroll_n_down(n),
-                    (graphics::SCHIP, (0x0, 0xF, 0xB)) => self.scroll_4_right(),
-                    (graphics::SCHIP, (0x0, 0xF, 0xC)) => self.scroll_4_left(),
-                    (graphics::SCHIP, (0x0, 0xF, 0xD)) => self.exit(),
-                    (graphics::SCHIP, (0x0, 0xF, 0xE)) => self.set_chip_mode(),
-                    (graphics::CHIP, (0x0, 0xF, 0xF)) => self.set_super_chip_mode(),
+                let mode = self.mode;
+                match (mode, (a, b, c)) {
+                    (SCHIP_MODE, (0x0, 0xC, n)) => self.scroll_n_down(n),
+                    (SCHIP_MODE, (0x0, 0xF, 0xB)) => self.scroll_4_right(),
+                    (SCHIP_MODE, (0x0, 0xF, 0xC)) => self.scroll_4_left(),
+                    (SCHIP_MODE, (0x0, 0xF, 0xD)) => self.exit(),
+                    (SCHIP_MODE, (0x0, 0xF, 0xE)) => self.set_chip_mode(),
+                    (CHIP_MODE, (0x0, 0xF, 0xF)) => self.set_super_chip_mode(),
                      _ => {}, 
                 }
             },
@@ -185,7 +188,7 @@ impl CPU {
             (0xC, x, n1, n2) => self.rand(x, CPU::to_val(n1, n2)),
 
             (0xD, x, y, n) =>  match (self.mode, (x, y, n)) {
-                (graphics::SCHIP, (x, y, 0x0)) => self.draw_extended_sprite(x, y),
+                (SCHIP_MODE, (x, y, 0x0)) => self.draw_extended_sprite(x, y),
                 (_, (x, y, n))       => self.draw_sprite(x, y, n),
             },
 
@@ -202,13 +205,13 @@ impl CPU {
             (0xF, x, 0x6, 0x5) => self.load_regs(x),
 
             (0xF, a, b, c) =>  match (self.mode, (a, b, c)) {
-                (graphics::SCHIP, (x, 0x3, 0x0)) => self.load_extended_sprite(x),
-                (graphics::SCHIP, (x, 0x7, 0x5)) => self.store_hp_regs(x),
-                (graphics::SCHIP, (x, 0x8, 0x5)) => self.load_hp_regs(x),
-                _ => fail!("Unknown opcode {:x}", opcode)
+                (SCHIP_MODE, (x, 0x3, 0x0)) => self.load_extended_sprite(x),
+                (SCHIP_MODE, (x, 0x7, 0x5)) => self.store_hp_regs(x),
+                (SCHIP_MODE, (x, 0x8, 0x5)) => self.load_hp_regs(x),
+                _ => panic!("Unknown opcode {:x}", opcode)
             },
 
-            _ => fail!("Unknown opcode {:x}",opcode)
+            _ => panic!("Unknown opcode {:x}",opcode)
         }
 
         if self.delay_timer > 0 { self.delay_timer -= 1;}
@@ -431,7 +434,7 @@ impl CPU {
      * pointed to by the index register */
     fn store_regs(&mut self, max_reg:u8) {
         let regs = self.registers.slice_to(max_reg as uint + 1).iter();
-        let store = self.mem.mut_slice_from(self.index_reg as uint).mut_iter();
+        let store = self.mem.slice_from_mut(self.index_reg as uint).iter_mut();
         /* itterate through both memory and registers*/
         for (mem, reg) in store.zip(regs) {
             *mem = *reg;
@@ -444,7 +447,7 @@ impl CPU {
      * the supplied register number starting from memory location
      * pointed to by the index register */
     fn load_regs(&mut self, max_reg:u8) {
-        let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
+        let regs = self.registers.slice_to_mut(max_reg as uint + 1).iter_mut();
         let store = self.mem.slice_from(self.index_reg as uint).iter();
         /* itterate through both memory and registers */
         for (mem, reg) in store.zip(regs) {
@@ -473,12 +476,12 @@ impl CPU {
         let n = if line_count == 0 {16} else {line_count};
         for i in range(0, n) {
 
-            let line = self.mem[(self.index_reg + (i as u16)) as uint];
+            let line : u8 = self.mem[(self.index_reg + (i as u16)) as uint];
 
             if self.graphics.draw_line(
                     self.registers[x as uint], 
                     self.registers[y as uint] + i,  
-                    line) {
+                    line as uint, 8) {
 
                 self.registers[FLAG] = 1;
             }
@@ -537,12 +540,12 @@ impl CPU {
     }
 
     fn set_chip_mode(&mut self)  {
-        self.mode = graphics::CHIP;
+        self.mode = CHIP_MODE;
         self.graphics.set_mode(self.mode);
     }
     
     fn set_super_chip_mode(&mut self) {
-        self.mode = graphics::SCHIP;
+        self.mode = SCHIP_MODE;
         self.graphics.set_mode(self.mode);
     }
 
@@ -557,7 +560,7 @@ impl CPU {
             if self.graphics.draw_line(
                     self.registers[start_x as uint], 
                     self.registers[start_y as uint] + y as u8, 
-                    line) 
+                    line as uint, 16) 
                 {
                 self.registers[FLAG] = 1;
             }
@@ -573,7 +576,7 @@ impl CPU {
 
     fn store_hp_regs(&mut self, max_reg:u8) {
         let regs = self.registers.slice_to(max_reg as uint + 1).iter();
-        let store = self.hp_48_flags.mut_iter();
+        let store = self.hp_48_flags.iter_mut();
         /* itterate through both hp registers and general registers*/
         for (hp_reg, reg) in store.zip(regs) {
             *hp_reg = *reg;
@@ -582,7 +585,7 @@ impl CPU {
     }
 
     fn load_hp_regs(&mut self, max_reg:u8) {
-        let regs = self.registers.mut_slice_to(max_reg as uint + 1).mut_iter();
+        let regs = self.registers.slice_to_mut(max_reg as uint + 1).iter_mut();
         let store = self.hp_48_flags.iter();
         /* itterate through both memory and registers */
         for (hp_reg, reg) in store.zip(regs) {
@@ -591,3 +594,314 @@ impl CPU {
         
     }
 }
+
+
+
+#[cfg(test)]
+mod tests {
+    use super::CPU;
+
+fn setup_blank_cpu() -> CPU {
+    CPU::new(Vec::from_elem(0x1, 0u8))
+}
+
+
+#[test]
+fn check_address_converter() {
+    let get_addr = CPU::to_addr;
+    assert_eq!(get_addr(0x1, 0x2, 0x3), 0x123);
+    assert_eq!(get_addr(0xF, 0xF, 0xF), 0xFFF);
+    assert_eq!(get_addr(0x0, 0x0 ,0x0), 0x000);
+}
+
+
+#[test]
+fn check_value_converter() {
+    let get_val = CPU::to_val;
+    assert_eq!(get_val( 0xF, 0xF), 0xFF);
+    assert_eq!(get_val( 0x0, 0x0), 0x0);
+    assert_eq!(get_val( 0x9, 0x5), 0x95); 
+} 
+
+#[test]
+fn check_hex_to_digits_converter() {
+    let get_vec = CPU::u16_to_hex_vec;
+    assert_eq!(get_vec(0xFFFF), (0xF, 0xF, 0xF, 0xF));
+    assert_eq!(get_vec(0x0000), (0x0, 0x0, 0x0, 0x0));
+    assert_eq!(get_vec(0x0456), (0x0, 0x4, 0x5, 0x6));
+}
+
+
+#[test]
+fn check_add_regs() {
+    let mut cpu = setup_blank_cpu();    
+    cpu.interpret(0x6205); /* Load 0x5 into reg 2 */
+    cpu.interpret(0x6510); /* Load 0x10 into reg 5 */
+    cpu.interpret(0x8254); /* Add reg 5 to reg 2 and store in reg 2 */
+    
+    assert_eq!(cpu.get_reg(0xF), 0x0);
+    assert_eq!(cpu.get_reg(2), 0x15);
+}
+
+#[test]
+fn check_add_regs_overlow_value() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x61FF); /* Load FF into reg 1 */ 
+    cpu.interpret(0x62FF); /* Load FF into reg 2 */
+    cpu.interpret(0x8124); /* Add reg2 to reg1 and store in reg 1 */
+
+    assert_eq!(cpu.get_reg(0xF),  0x1); /* Check flag set */
+    assert_eq!(cpu.get_reg(1), 0xFE); 
+}
+
+/*** Test opcode 8XY5 ***/
+
+/* Check a subtraction which results
+ * in a value greater than zero */
+#[test]
+fn check_sub_regs() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x64F0); /* Load F0 into reg 4 */
+    cpu.interpret(0x6301); /* load 1 into reg 3 */
+    cpu.interpret(0x8435); /* sub reg 3 from reg 4 and store in reg 4 */
+
+    assert_eq!(cpu.get_reg(0xF), 0x1); /* check no overflow */
+    assert_eq!(cpu.get_reg(4), 0xF0 - 0x1);
+
+}
+
+/* Check a subtraction which results
+ * in a values less than zero */
+#[test]
+fn check_sub_regs_overflow() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6712); /* Load 0x12 into reg 7 */
+    cpu.interpret(0x6920); /* Load 020 into reg 9 */
+    cpu.interpret(0x8795); /* sub r9 from r7 store result in r7 */
+
+    assert_eq!(cpu.get_reg(0xF), 0x0); /* check overflow */
+    assert_eq!(cpu.get_reg(0x7), 0x12 - 0x20 as u8);
+
+}
+
+
+/*** Test opcode 8XY7, subbing registers ***
+ *** the other way round than from 8XY5  ***/
+
+
+/* Check a subtraction which results
+ * in a value greater than zero */
+#[test]
+fn check_sub_inverted_regs() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6A23);
+    cpu.interpret(0x6B30);
+    cpu.interpret(0x8AB7);
+
+    assert_eq!(cpu.get_reg(0xF), 0x1);
+    assert_eq!(cpu.get_reg(0xA), 0x30 - 0x23);
+}
+
+
+
+/* Check a subtraction which results
+ * in a value less than zero */
+#[test]
+fn check_sub_inverted_regs_overflow() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6CD3);
+    cpu.interpret(0x6E30);
+    cpu.interpret(0x8CE7);
+
+    assert_eq!(cpu.get_reg(0xF), 0x0);
+    assert_eq!(cpu.get_reg(0xC), 0x30 - 0xD3 as u8); 
+}
+
+
+
+#[test]
+fn check_index_add_reg() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0xA111); //set I to 0x111
+    cpu.interpret(0x6120); // set reg 1 to 20
+    cpu.interpret(0xF11E); // Add reg 1 to I
+
+    assert_eq!(cpu.get_reg(0xF), 0x0);
+    assert_eq!(cpu.get_index_reg(), 0x20 + 0x111);
+}
+
+
+
+#[test]
+fn check_index_add_reg_overflow() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0xAFFF); //set I to 0xFFF
+    cpu.interpret(0x6C56); // set reg C to 0x56
+    cpu.interpret(0xFC1E); // Add reg C to I
+
+    assert_eq!(cpu.get_reg(0xF), 0x1);
+    assert_eq!(cpu.get_index_reg(), (0xFFF + 0x056) % 0x1000);
+}
+
+
+
+/*** Jump instructions */
+
+/*** Check instruction 3XNN ***/
+
+/* Check skip occurs if
+ * reg equals value */
+#[test]
+fn check_skip_reg_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6544); /* set reg 5 to 0x44 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x3544);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+}
+
+
+
+/* Check skip doesn't occur
+ * if reg doesn't equal value */
+#[test]
+fn check_no_skip_reg_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6067); /* set reg 0 to 0x67 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x3081);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+}
+
+/*** Check instruction 4XNN ***/
+
+
+/*Check skip occurs if
+ * reg not equal to value */
+#[test]
+fn check_skip_reg_not_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6794); /* set reg 7 to 0x94 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x4700);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+
+} 
+
+
+
+/* Check skip doesn't occur if
+ * reg  equals value  */
+#[test]
+fn check_no_skip_reg_not_equals_val() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6DAB); /* set reg D to 0xAB */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x4DAB);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+}
+
+/*** Check instruction 5XY0 ***/
+
+/* Check skip occurs if
+ * registers contain the same value */
+#[test]
+fn check_skip_regs_equal() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6CF2); /* set reg C to 0xF2 */
+    cpu.interpret(0x69F2); /* set reg 9 to 0xF2 */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x5C90);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+}
+
+/* Check skip doesn't occur
+ * if registers don't contain
+ * the same value */
+#[test]
+fn check_no_skip_regs_equal() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6A71); /* set reg A to 0x71 */
+    cpu.interpret(0x69BA); /* set reg 9 to 0xBA */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x5A90);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+}
+
+
+
+
+/*** Check instruction 9XY0 ***/
+
+/* Check skip occurs when regsisters
+ * not equal */
+#[test]
+fn check_skip_regs_not_equal() {  
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6661); /* set reg 6 to 0x66 */
+    cpu.interpret(0xEEE); /* set reg E to 0xEE */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x96E0);
+    assert_eq!(cpu.get_pc(), before_pc + 4);
+}
+
+
+/* Check skip doesn't occur when registers
+ * are equal */
+#[test]
+fn check_no_skip_regs_not_equal() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6555); /* set reg 5 to 0x55 */
+    cpu.interpret(0x6DDD); /* set reg D to 0xDD */
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x5D0);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+
+}
+
+
+/*** Check instruction BNNN ***/
+
+#[test]
+fn check_address_add_r0() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x6043);
+    cpu.interpret(0xB151);
+    assert_eq!(cpu.get_pc(), 0x043 + 0x151);
+    
+}
+
+
+#[test]
+/*** Check instruction 1NNN ***/
+fn check_jump() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x1FFF);
+    assert_eq!(cpu.get_pc(), 0xFFF);
+}
+
+
+#[test]
+/*** Check instruction 2NNN ***/
+fn check_call() {
+    let mut cpu = setup_blank_cpu();
+    cpu.interpret(0x2342);
+    assert_eq!(cpu.get_pc(), 0x342);
+}
+
+
+
+#[test]
+fn check_return() {
+    let mut cpu = setup_blank_cpu();
+    let before_pc = cpu.get_pc();
+    cpu.interpret(0x2268);
+    cpu.interpret(0x00EE);
+    assert_eq!(cpu.get_pc(), before_pc + 2);
+
+}
+
+
+}
+
+
