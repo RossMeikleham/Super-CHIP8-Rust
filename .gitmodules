@@ -1,3 +1,0 @@
-[submodule "core/rust-sdl"]
-	path = core/rust-sdl
-	url = https://github.com/brson/rust-sdl.git
