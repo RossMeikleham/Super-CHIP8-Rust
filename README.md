@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/RossMeikleham/Super-CHIP8-Rust.svg?branch=master)](https://travis-ci.org/RossMeikleham/Super-CHIP8-Rust)
 # SCHIP-Rust
 
 An implementation of a CHIP 8 emulator in Rust with extended Super CHIP 8 functionality. 
