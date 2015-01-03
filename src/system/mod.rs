@@ -10,7 +10,7 @@ pub mod io;
 const MAX_RAM : u16 = 4096;
 const FLAG : uint = 15;
 const CHIP_MODE : bool = false;
-const SCHIP_MODE : bool = false;
+const SCHIP_MODE : bool = true;
 
 pub struct CPU {
      registers : [u8, ..16], /* 16 8 bit general purpose registers */
