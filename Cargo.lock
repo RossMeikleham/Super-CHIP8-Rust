@@ -3,7 +3,7 @@ name = "Super CHIP8"
 version = "0.0.1"
 dependencies = [
  "sdl 0.3.6 (git+https://github.com/brson/rust-sdl)",
- "time 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -12,35 +12,15 @@ version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
-name = "log"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "regex 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "regex"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "rustc-serialize"
-version = "0.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
 name = "sdl"
 version = "0.3.6"
-source = "git+https://github.com/brson/rust-sdl#ba89c27d0a83031a4470193ed8e61c92c721c1d8"
+source = "git+https://github.com/brson/rust-sdl#b90a14d4e0af389270b06cb69bfd0c6141f623b0"
 
 [[package]]
 name = "time"
-version = "0.1.4"
+version = "0.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "gcc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "rustc-serialize 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 

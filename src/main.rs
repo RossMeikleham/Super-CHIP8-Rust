@@ -6,6 +6,7 @@ use std::os;
 use system::CPU;
 use std::io::timer;
 use std::time::duration::Duration;
+use std::iter;
 
 mod system;
 
@@ -26,7 +27,8 @@ fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
             /* Programs start at address 0x200, in original implementation
              * 0x000 - 0x1FF reserved for VM, just pad start of mem with 
              * 0s in this case */
-            let mem = Vec::from_elem(START_RAM, 0u8) + rom_contents.as_slice();
+            let start_mem : Vec<u8>  = iter::repeat(0u8).take(START_RAM).collect();
+            let mem = start_mem + rom_contents.as_slice();
             let size = mem.len();
 
             if size <= MAX_RAM { 
@@ -72,12 +74,8 @@ fn run_program(mut chip8 :system::CPU, cycle_max: u64, ins_per_sec: u64)  {
 
 
 fn main() {
-    let mut args = os::args();
-   
-   let file_name = match args.remove(1)  {
-       Some(name) => name,
-       None => panic!("No file name specified")
-   };
+    let mut args = os::args();   
+    let file_name = args.remove(1);
 
     let memory = match read_rom(file_name) {
         Ok(mem) => mem,

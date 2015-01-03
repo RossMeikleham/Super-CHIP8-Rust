@@ -1,4 +1,5 @@
 use std::iter::range_step;
+use std::iter;
 
 pub mod graphics_sdl;
 
@@ -67,8 +68,9 @@ impl Graphics {
               
         let largest_bit : uint = 1 << (bit_count - 1); 
 
-        Vec::from_fn(bit_count, 
-            |idx| if n & (largest_bit >> idx ) != 0 {1u8} else {0u8} )            
+        iter::range(0, bit_count)
+            .map(|idx| if n & (largest_bit >> idx ) != 0 {1u8} else {0u8}) 
+            .collect()           
     }
 
 

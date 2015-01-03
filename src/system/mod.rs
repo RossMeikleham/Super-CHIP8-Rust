@@ -600,9 +600,10 @@ impl CPU {
 #[cfg(test)]
 mod tests {
     use super::CPU;
+    use std::iter;
 
 fn setup_blank_cpu() -> CPU {
-    CPU::new(Vec::from_elem(0x1, 0u8))
+    CPU::new(iter::repeat(0u8).take(0x1).collect()) 
 }
 
 
