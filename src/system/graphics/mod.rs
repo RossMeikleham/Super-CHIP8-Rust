@@ -84,7 +84,7 @@ impl Graphics {
                        .map(|&x| if x == 0 {false} else {true})
                        .collect();
       
-        let current_states = self.screen[starty as uint]
+        let current_states = self.screen[starty as uint % 64]
                         .slice_from_mut(startx as uint);
         
         let mut zipped_states = current_states.iter_mut().zip(pixel_states.iter());
