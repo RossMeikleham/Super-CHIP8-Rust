@@ -35,7 +35,7 @@ fn get_height(mode : bool) -> uint {
 
 pub struct Graphics {
     mode :bool,
-    screen : [[bool, ..MAX_HORIZONTAL_PIXELS], ..MAX_VERTICAL_PIXELS],
+    screen : [[bool; MAX_HORIZONTAL_PIXELS]; MAX_VERTICAL_PIXELS],
     out : graphics_sdl::Screen
 }
 
@@ -44,7 +44,7 @@ impl Graphics {
     pub fn new() -> Graphics {
         Graphics { mode: false,
                    /* Initialize all pixels to blank */
-                   screen: [[false, ..MAX_HORIZONTAL_PIXELS], ..MAX_VERTICAL_PIXELS],
+                   screen: [[false; MAX_HORIZONTAL_PIXELS]; MAX_VERTICAL_PIXELS],
                    out: graphics_sdl::Screen::new(256, 128, 
                     CHIP_DIMENSIONS.width, CHIP_DIMENSIONS.height)
          }

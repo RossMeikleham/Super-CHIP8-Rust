@@ -1,10 +1,10 @@
 extern crate sdl;
 
 pub struct IOImpl { 
-    key_set: [char, ..16]
+    key_set: [char; 16]
 }
 
-fn index(keyset:[char, ..16], key:char) -> Option<u8> {
+fn index(keyset:[char; 16], key:char) -> Option<u8> {
     for i in keyset.iter() {
         if *i == key {
             return Some(*i as u8);
@@ -16,7 +16,7 @@ fn index(keyset:[char, ..16], key:char) -> Option<u8> {
 
 impl IOImpl {
     
-    pub fn new(key_set: [char, ..16]) -> IOImpl {
+    pub fn new(key_set: [char; 16]) -> IOImpl {
         IOImpl {  key_set: key_set}
     }
 

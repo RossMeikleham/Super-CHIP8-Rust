@@ -13,15 +13,15 @@ const CHIP_MODE : bool = false;
 const SCHIP_MODE : bool = true;
 
 pub struct CPU {
-     registers : [u8, ..16], /* 16 8 bit general purpose registers */
-     mem : [u8, .. MAX_RAM as uint], /* 4096bytes of memory */
+     registers : [u8; 16], /* 16 8 bit general purpose registers */
+     mem : [u8; MAX_RAM as uint], /* 4096bytes of memory */
      index_reg : u16, /* 16 bit index register */
      pc: u16, /* Program counter */
      sp: uint, /* Stack Pointer */
-     stack : [u16, ..16], /* 16 stack frames */
+     stack : [u16; 16], /* 16 stack frames */
      sound_timer : u8, 
      delay_timer : u8,
-     hp_48_flags: [u8, ..8], /*SCHIP */
+     hp_48_flags: [u8; 8], /*SCHIP */
      graphics :graphics::Graphics,
      io :io::IO,
      halt:bool,
@@ -30,7 +30,7 @@ pub struct CPU {
 }
 
 
-static SPRITE_SET: [u8, ..(80 + 160)] =   
+static SPRITE_SET: [u8; (80 + 160)] =   
    [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -72,15 +72,15 @@ static SPRITE_SET: [u8, ..(80 + 160)] =
 impl CPU {
 
   pub fn new(mem: Vec<u8>) -> CPU {
-        let mut cpu = CPU { registers: [0u8, ..16], 
-              mem: [0u8, ..(MAX_RAM as uint)],
+        let mut cpu = CPU { registers: [0u8; 16], 
+              mem: [0u8; (MAX_RAM as uint)],
               index_reg: 0,
               pc: 0x200,
               sp: 1,
-              stack : [0u16, ..16],
+              stack : [0u16; 16],
               sound_timer: 0,
               delay_timer: 0,
-              hp_48_flags: [0u8, ..8],
+              hp_48_flags: [0u8; 8],
               graphics : graphics::Graphics::new(),
               io : io::IO::new(),
               halt:false,
@@ -119,7 +119,7 @@ impl CPU {
      
     /* converts 3 hex digits into a 12 bit address */    
     pub fn to_addr(dig1 :u8, dig2 :u8, dig3 :u8) -> u16 {
-        (dig1 as u16 << 8) | (dig2 as u16 << 4)  | dig3 as u16
+        ((dig1 as u16) << 8) | ((dig2 as u16) << 4)  | dig3 as u16
     }  
 
     /* combines 2 hex digits into a 8 bit value */
@@ -555,7 +555,7 @@ impl CPU {
         self.registers[FLAG] = 0;
 
         for y in range(0u, 16u) {
-            let line = (self.mem[self.index_reg as uint + (2 * y)] as u16 << 4) 
+            let line = ((self.mem[self.index_reg as uint + (2 * y)] as u16) << 4) 
                 | (self.mem[self.index_reg as uint + (2 * y) + 1] as u16);
             if self.graphics.draw_line(
                     self.registers[start_x as uint], 

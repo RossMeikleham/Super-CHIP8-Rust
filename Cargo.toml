@@ -15,7 +15,7 @@ name = "schip8"
 path = "src/main.rs"
 
 [dependencies]
-time = "0.1.0"
+time = "0.1.10"
 
 [dependencies.sdl]
-git = "https://github.com/brson/rust-sdl"
+git = "https://github.com/RossMeikleham/rust-sdl"

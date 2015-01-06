@@ -1,13 +1,13 @@
 pub mod sdl_io;
 
-static DEFAULT_KEYS : [char, ..16] = ['z', 'x', 'c', 'v',
+static DEFAULT_KEYS : [char; 16] = ['z', 'x', 'c', 'v',
                                           'a', 's', 'd', 'f',
                                           'q', 'w', 'e', 'r',
                                           '1', '2', '3', '4'];
 
 pub struct IO {
     keyboard: sdl_io::IOImpl,
-    keys : [char, ..16]
+    keys : [char; 16]
 }
 
 impl IO {
