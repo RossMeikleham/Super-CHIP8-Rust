@@ -24,6 +24,6 @@ impl IO {
     }
 
     pub fn is_key_pressed(&mut self, key_index:u8) -> bool {
-        self.keyboard.key_pressed(self.keys[key_index as uint])
+        self.keyboard.key_pressed(self.keys[key_index as usize])
     }
 }

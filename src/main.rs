@@ -1,17 +1,19 @@
 extern crate time;
 
-use std::io::File; /* input/output */
+use std::old_io::File; /* input/output */
 use std::string::String;
 use std::os;
 use system::CPU;
-use std::io::timer;
+use std::old_io::timer;
 use std::time::duration::Duration;
 use std::iter;
 
+
 mod system;
 
-static MAX_RAM : uint = 0x1000;
-static START_RAM :uint = 0x200;
+
+static MAX_RAM : usize = 0x1000;
+static START_RAM :usize = 0x200;
 
 static INSTRUCTIONS_PER_SEC : u64 = 500;
 static CYCLES_CHECK : u64 = 5;

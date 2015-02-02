@@ -26,10 +26,10 @@ impl IOImpl {
         'key_loop : loop {
             match sdl::event::wait_event() {
             sdl::event::Event::Key(k, _, _, _) =>  {
-                if k as uint == sdl::event::Key::Escape as uint {
+                if k as usize == sdl::event::Key::Escape as usize {
                     panic!("Exited program");
                 }
-                else {println!("pressed {}", k as uint);}
+                else {println!("pressed {}", k as usize);}
                 match index(self.key_set, (k as u8) as char) {
                     Some(index) => { return index;},
                     None => {}

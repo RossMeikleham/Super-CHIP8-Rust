@@ -8,16 +8,16 @@ pub mod io;
 
 
 const MAX_RAM : u16 = 4096;
-const FLAG : uint = 15;
+const FLAG : usize = 15;
 const CHIP_MODE : bool = false;
 const SCHIP_MODE : bool = true;
 
 pub struct CPU {
      registers : [u8; 16], /* 16 8 bit general purpose registers */
-     mem : [u8; MAX_RAM as uint], /* 4096bytes of memory */
+     mem : [u8; MAX_RAM as usize], /* 4096bytes of memory */
      index_reg : u16, /* 16 bit index register */
      pc: u16, /* Program counter */
-     sp: uint, /* Stack Pointer */
+     sp: usize, /* Stack Pointer */
      stack : [u16; 16], /* 16 stack frames */
      sound_timer : u8, 
      delay_timer : u8,
@@ -73,7 +73,7 @@ impl CPU {
 
   pub fn new(mem: Vec<u8>) -> CPU {
         let mut cpu = CPU { registers: [0u8; 16], 
-              mem: [0u8; (MAX_RAM as uint)],
+              mem: [0u8; (MAX_RAM as usize)],
               index_reg: 0,
               pc: 0x200,
               sp: 1,
@@ -102,11 +102,11 @@ impl CPU {
     }
 
    pub fn get_mem(&self, loc:u16) -> u8 {
-       self.mem[(loc % MAX_RAM) as uint]
+       self.mem[(loc % MAX_RAM) as usize]
    }
 
    pub fn get_reg(&self, reg:u8) -> u8 {
-       self.registers[reg as uint]
+       self.registers[reg as usize]
    }
 
    pub fn get_pc(&self) -> u16 {
@@ -139,8 +139,8 @@ impl CPU {
     /* obtains the current 16 bit opcode from memory */
     fn get_opcode(&self) -> u16 {
 
-        (((self.mem[self.pc as uint]) as u16) << 8)  |
-        (self.mem[(self.pc + 1) as uint]) as u16
+        (((self.mem[self.pc as usize]) as u16) << 8)  |
+        (self.mem[(self.pc + 1) as usize]) as u16
     } 
 
     /* perform 1 CPU instruction */
@@ -283,7 +283,7 @@ impl CPU {
     /* Skip next instruction if register value is equal to 
      * supplied value */
     fn skip_equals_reg_val(&mut self, reg:u8, val:u8) {
-        if self.registers[reg as uint] == val {
+        if self.registers[reg as usize] == val {
             self.inc_pc();
         }
                 
@@ -291,7 +291,7 @@ impl CPU {
     /* Skip next instruction if register value is not equal
      * to supplied value */
     fn skip_not_equals_reg_val(&mut self, reg:u8, val:u8) {
-        if self.registers[reg as uint] != val {
+        if self.registers[reg as usize] != val {
             self.inc_pc();
         }
     }
@@ -299,60 +299,60 @@ impl CPU {
     /* Skip next instruction if both register values are equal */
     fn skip_equals_regs(&mut self, reg1:u8, reg2:u8) {
         
-        if self.registers[reg1 as uint] == self.registers[reg2 as uint] {
+        if self.registers[reg1 as usize] == self.registers[reg2 as usize] {
                self.inc_pc();
         }
     }
 
     /* Skip next instruction if both register values are not equal */
     fn skip_not_equals_regs(&mut self, reg1:u8, reg2:u8) {
-        if self.registers[reg1 as uint] != self.registers[reg2 as uint] {
+        if self.registers[reg1 as usize] != self.registers[reg2 as usize] {
                self.inc_pc();
            }
     }
 
     /* copy the supplied value into the register */
     fn mov_reg_val(&mut self, reg:u8, val:u8) {
-        self.registers[reg as uint] = val;
+        self.registers[reg as usize] = val;
     }
 
     /* add the supplied value to the value currently
      * stored in the register and store the result in the register */
     fn add_reg_val(&mut self, reg:u8, val:u8) {
-        self.registers[reg as uint] += val;
+        self.registers[reg as usize] += val;
     }
     
     /* Copy the value of the second register into the first register */
     fn mov_regs(&mut self, reg1:u8, reg2:u8) {
-        self.registers[reg1 as uint] = self.registers[reg2 as uint];
+        self.registers[reg1 as usize] = self.registers[reg2 as usize];
     }
 
     /* perform a binary or on the values of the first and second
      * registers, store the result in the first register*/
     fn or_regs(&mut self, reg1:u8, reg2:u8) {
-       self.registers[reg1 as uint] |= self.registers[reg2 as uint];
+       self.registers[reg1 as usize] |= self.registers[reg2 as usize];
     }
 
     /* performa binary and on the values of the first and second
      * registers, store the result in the first register */
     fn and_regs(&mut self, reg1:u8, reg2:u8) {
-        self.registers[reg1 as uint] &= self.registers[reg2 as uint];
+        self.registers[reg1 as usize] &= self.registers[reg2 as usize];
     }
 
     /* perform binary xor on the values of the first and second
      * registers, store the result in the first register */
     fn xor_regs(&mut self, reg1:u8, reg2:u8) {
-        self.registers[reg1 as uint] ^= self.registers[reg2 as uint];
+        self.registers[reg1 as usize] ^= self.registers[reg2 as usize];
     }
 
     /* Add two regs, if overflow set flag register otherwise
      * unset flag register */
     fn add_regs(&mut self, reg1:u8, reg2:u8) {
-        let register1 = self.registers[reg1 as uint];
-        let register2 = self.registers[reg2 as uint];
+        let register1 = self.registers[reg1 as usize];
+        let register2 = self.registers[reg2 as usize];
         self.registers[FLAG] =  
             match (0xFF - register1) < register2 { true => 1, false => 0};
-        self.registers[reg1 as uint] += register2;  
+        self.registers[reg1 as usize] += register2;  
     }
 
 
@@ -361,28 +361,28 @@ impl CPU {
      * set flag register, performs flag setting before subtraction
      * takes place. Store result in "store_reg".*/
     fn sub_regs(&mut self, reg1:u8, reg2:u8, store_reg:u8) {
-        let register1 = self.registers[reg1 as uint];
-        let register2 = self.registers[reg2 as uint];
+        let register1 = self.registers[reg1 as usize];
+        let register2 = self.registers[reg2 as usize];
         
         self.registers[FLAG] = 
             match register2 < register1 { true => 1, false => 0};
-        self.registers[store_reg as uint] = register1 -  register2;
+        self.registers[store_reg as usize] = register1 -  register2;
     }
 
 
     /* Shift register left by 1, set flag register to most significant bit
      * before shifting */
     fn shift_left(&mut self, reg:u8) {
-        self.registers[FLAG] = (self.registers[reg as uint] & 0x80) >> 7;
-        self.registers[reg as uint] <<= 1;
+        self.registers[FLAG] = (self.registers[reg as usize] & 0x80) >> 7;
+        self.registers[reg as usize] <<= 1;
     }
 
 
     /* Shift register right by 1, set flag register to least significant bit
      * before shifting */
     fn shift_right(&mut self, reg:u8) {
-        self.registers[FLAG] = self.registers[reg as uint] & 0x1;
-        self.registers[reg as uint] >>= 1;
+        self.registers[FLAG] = self.registers[reg as usize] & 0x1;
+        self.registers[reg as usize] >>= 1;
     }
 
     /* Set index register to supplied address */
@@ -397,29 +397,29 @@ impl CPU {
 
     /* set register to supplied value and a random integer between 0 and 255 */
     fn rand(&mut self, reg:u8, val:u8) {
-        self.registers[reg as uint] = val & random::<u8>();
+        self.registers[reg as usize] = val & random::<u8>();
     }
 
     /* Set the delay timer to the value in the register */
     fn set_delay_reg(&mut self, reg:u8) {
-        self.delay_timer = self.registers[reg as uint];
+        self.delay_timer = self.registers[reg as usize];
     }
 
     /* set the register to the value in the display timer */
     fn set_reg_delay(&mut self, reg:u8) {
-        self.registers[reg as uint] = self.delay_timer;
+        self.registers[reg as usize] = self.delay_timer;
     }
     
     /* set the sound timer to the value in the register */
     fn set_sound_reg(&mut self, reg:u8) {
-        self.sound_timer = self.registers[reg as uint];
+        self.sound_timer = self.registers[reg as usize];
     }
 
     /* add the value in the register to value in the index register and store
      * the result in the index register. If this operation causes overflow
      * set the flag register, otherwise unset it */
     fn add_reg_index(&mut self, reg:u8) {
-        let reg = reg as uint;
+        let reg = reg as usize;
         self.registers[FLAG] = 
             match (0xFFF - (self.registers[reg] as u16)) < self.index_reg {
                 true => 1,
@@ -433,8 +433,8 @@ impl CPU {
      * the supplied register number starting from memory location
      * pointed to by the index register */
     fn store_regs(&mut self, max_reg:u8) {
-        let regs = self.registers.slice_to(max_reg as uint + 1).iter();
-        let store = self.mem.slice_from_mut(self.index_reg as uint).iter_mut();
+        let regs = (&self.registers[.. max_reg as usize + 1]).iter();
+        let store = (&mut self.mem[self.index_reg as usize ..]).iter_mut();
         /* itterate through both memory and registers*/
         for (mem, reg) in store.zip(regs) {
             *mem = *reg;
@@ -447,8 +447,8 @@ impl CPU {
      * the supplied register number starting from memory location
      * pointed to by the index register */
     fn load_regs(&mut self, max_reg:u8) {
-        let regs = self.registers.slice_to_mut(max_reg as uint + 1).iter_mut();
-        let store = self.mem.slice_from(self.index_reg as uint).iter();
+        let regs = (&mut self.registers[.. max_reg as usize + 1]).iter_mut();
+        let store = (&self.mem[self.index_reg as usize ..]).iter();
         /* itterate through both memory and registers */
         for (mem, reg) in store.zip(regs) {
             *reg = *mem;
@@ -460,10 +460,10 @@ impl CPU {
      * most significant of three digits at the address in I, the middle digit
      * at I + 1, and the LSD at I + 2.*/
     fn binary_decimal(&mut self, reg:u8) {
-        let val = self.registers[reg as uint];
-        self.mem[self.index_reg as uint] = val/100;
-        self.mem[(self.index_reg + 1) as uint] = (val % 100)/10;
-        self.mem[(self.index_reg + 2) as uint] = (val % 100)%10;
+        let val = self.registers[reg as usize];
+        self.mem[self.index_reg as usize] = val/100;
+        self.mem[(self.index_reg + 1) as usize] = (val % 100)/10;
+        self.mem[(self.index_reg + 2) as usize] = (val % 100)%10;
  
     }
     
@@ -474,14 +474,14 @@ impl CPU {
        
         self.registers[FLAG] = 0;
         let n = if line_count == 0 {16} else {line_count};
-        for i in range(0, n) {
+        for i in 0 .. n {
 
-            let line : u8 = self.mem[(self.index_reg + (i as u16)) as uint];
+            let line : u8 = self.mem[(self.index_reg + (i as u16)) as usize];
 
             if self.graphics.draw_line(
-                    self.registers[x as uint], 
-                    self.registers[y as uint] + i,  
-                    line as uint, 8) {
+                    self.registers[x as usize], 
+                    self.registers[y as usize] + i,  
+                    line as usize, 8) {
 
                 self.registers[FLAG] = 1;
             }
@@ -492,19 +492,19 @@ impl CPU {
 
     /* set I reg to sprite number stored in the given register */
     fn load_sprite(&mut self, reg:u8) {
-        self.index_reg = (5 * self.registers[reg as uint]) as u16;
+        self.index_reg = (5 * self.registers[reg as usize]) as u16;
     }
 
     /* Wait for a keypress and set the contents of the
      * given register to that keypress */
     fn wait_for_key(&mut self, reg:u8) {
-        self.registers[reg as uint] = self.io.wait_for_key();  
+        self.registers[reg as usize] = self.io.wait_for_key();  
     }
     
     /* if key in given register is being pressed then
      * skip the next instruction */
     fn skip_key_pressed(&mut self, reg:u8) {
-        if self.io.is_key_pressed(self.registers[reg as uint]) {
+        if self.io.is_key_pressed(self.registers[reg as usize]) {
             self.inc_pc();
         }
     }   
@@ -512,7 +512,7 @@ impl CPU {
     /* if key in given register is not being pressed then
      * skip the next instruction */
     fn skip_not_key_pressed(&mut self, reg:u8) {
-        if !self.io.is_key_pressed(self.registers[reg as uint]) {
+        if !self.io.is_key_pressed(self.registers[reg as usize]) {
            self.inc_pc();
         }
     
@@ -554,13 +554,13 @@ impl CPU {
     fn draw_extended_sprite(&mut self, start_x:u8, start_y:u8) {
         self.registers[FLAG] = 0;
 
-        for y in range(0u, 16u) {
-            let line = ((self.mem[self.index_reg as uint + (2 * y)] as u16) << 4) 
-                | (self.mem[self.index_reg as uint + (2 * y) + 1] as u16);
+        for y in 0us .. 16us {
+            let line = ((self.mem[self.index_reg as usize + (2 * y)] as u16) << 4) 
+                | (self.mem[self.index_reg as usize + (2 * y) + 1] as u16);
             if self.graphics.draw_line(
-                    self.registers[start_x as uint], 
-                    self.registers[start_y as uint] + y as u8, 
-                    line as uint, 16) 
+                    self.registers[start_x as usize], 
+                    self.registers[start_y as usize] + y as u8, 
+                    line as usize, 16) 
                 {
                 self.registers[FLAG] = 1;
             }
@@ -571,12 +571,12 @@ impl CPU {
 
     /* load extended sprite 4x10 pixels */
     fn load_extended_sprite(&mut self, reg:u8) {
-        self.index_reg = (0x50 + (0xA * self.registers[reg as uint])) as u16;
+        self.index_reg = (0x50 + (0xA * self.registers[reg as usize])) as u16;
     }
 
     fn store_hp_regs(&mut self, max_reg:u8) {
-        let regs = self.registers.slice_to(max_reg as uint + 1).iter();
-        let store = self.hp_48_flags.iter_mut();
+        let regs =  (&self.registers[.. max_reg as usize + 1]).iter();
+        let store = (&mut self.hp_48_flags).iter_mut();
         /* itterate through both hp registers and general registers*/
         for (hp_reg, reg) in store.zip(regs) {
             *hp_reg = *reg;
@@ -585,8 +585,8 @@ impl CPU {
     }
 
     fn load_hp_regs(&mut self, max_reg:u8) {
-        let regs = self.registers.slice_to_mut(max_reg as uint + 1).iter_mut();
-        let store = self.hp_48_flags.iter();
+        let regs = (&mut self.registers[(max_reg as usize + 1) ..]).iter_mut();
+        let store = (&self.hp_48_flags).iter();
         /* itterate through both memory and registers */
         for (hp_reg, reg) in store.zip(regs) {
             *reg = *hp_reg;

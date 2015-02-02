@@ -1,15 +1,14 @@
 use std::iter::range_step;
-use std::iter;
 
 pub mod graphics_sdl;
 
-const MAX_HORIZONTAL_PIXELS : uint = 128;
-const MAX_VERTICAL_PIXELS : uint = 64;
+const MAX_HORIZONTAL_PIXELS : usize = 128;
+const MAX_VERTICAL_PIXELS : usize = 64;
 
 
 struct Dimensions {
-    width:  uint,
-    height: uint
+    width:  usize,
+    height: usize
 }
 
 static SCHIP_DIMENSIONS :Dimensions = Dimensions{ width: 128, height: 64};
@@ -18,14 +17,14 @@ static  CHIP_DIMENSIONS :Dimensions = Dimensions{ width: 64,  height: 32};
 
 // Enums are uncopyable wtf, now completely useless >.>
 // Use bools instead to check CHIP or SCHIP mode
-fn get_width(mode : bool) -> uint { 
+fn get_width(mode : bool) -> usize { 
     match mode {
         false => CHIP_DIMENSIONS.width,
         true => SCHIP_DIMENSIONS.width
     }
 }
 
-fn get_height(mode : bool) -> uint { 
+fn get_height(mode : bool) -> usize { 
     match mode {
         false => CHIP_DIMENSIONS.height,
         true => SCHIP_DIMENSIONS.height
@@ -57,25 +56,25 @@ impl Graphics {
     }
     
 
-    pub fn draw_pix(&mut self, x:uint, y:uint, state:bool) {
+    pub fn draw_pix(&mut self, x:usize, y:usize, state:bool) {
         self.screen[y][x] = state;
     }
 
 
     /* Create a bit vector for the supplied number from
      * MS bit to LS bit */
-    fn to_bit_vec(n:uint, bit_count:uint) -> Vec<u8> {
+    fn to_bit_vec(n:usize, bit_count:usize) -> Vec<u8> {
               
-        let largest_bit : uint = 1 << (bit_count - 1); 
+        let largest_bit : usize = 1 << (bit_count - 1); 
 
-        iter::range(0, bit_count)
+        (0 .. bit_count)
             .map(|idx| if n & (largest_bit >> idx ) != 0 {1u8} else {0u8}) 
             .collect()           
     }
 
 
     
-    pub fn draw_line(&mut self, startx:u8, starty:u8, line:uint, bits:uint) -> bool {       
+    pub fn draw_line(&mut self, startx:u8, starty:u8, line:usize, bits:usize) -> bool {       
       
        let mut unset_occured = false;
 
@@ -84,8 +83,8 @@ impl Graphics {
                        .map(|&x| if x == 0 {false} else {true})
                        .collect();
       
-        let current_states = self.screen[starty as uint % 64]
-                        .slice_from_mut(startx as uint);
+        let current_states = &mut (self.screen[starty as usize % 64])[startx as usize ..];
+                        
         
         let mut zipped_states = current_states.iter_mut().zip(pixel_states.iter());
         /* Set pixel to old pixel xor new pixel */
@@ -102,13 +101,13 @@ impl Graphics {
 
 
     pub fn scroll_right(&mut self, n:u8) {
-        let n = n as uint;
-        for y in range(0, get_height(self.mode)) {
+        let n = n as usize;
+        for y in 0 .. get_height(self.mode) {
             for x in range_step(get_width(self.mode) - 1, n  - 1, -1) {
                 let set = self.screen[y][x - n];
                 self.draw_pix(x, y, set);            
             }
-            for x  in range(0, n) { 
+            for x in 0 .. n { 
                 self.draw_pix(x, y, false);
             }
         }
@@ -116,13 +115,13 @@ impl Graphics {
 
     pub fn scroll_left(&mut self, n:u8) {
         let x_max = get_width(self.mode);
-        let n = n as uint;
-        for y in range(0 , get_height(self.mode)) {
-            for x in range(0, x_max - n) {
+        let n = n as usize;
+        for y in 0  .. get_height(self.mode) {
+            for x in 0 .. (x_max - n) {
                 let set = self.screen[y][x + n];
                 self.draw_pix(x, y, set);
             }
-            for x in range(x_max - n, x_max) {
+            for x in (x_max - n .. x_max) {
                 self.draw_pix(x, y, false);
             }
         }
@@ -130,21 +129,21 @@ impl Graphics {
 
     pub fn scroll_down(&mut self, n:u8) {
         let y_max = get_height(self.mode);
-        let n = n as uint;
-        for x in range(0, get_width(self.mode)) {
+        let n = n as usize;
+        for x in 0 .. get_width(self.mode) {
             for y in range_step(y_max - 1, n - 1, -1) {                
                 let set = self.screen[y - n][x];
                 self.draw_pix(x, y, set);            
             }
-            for y  in range(0, n) { 
+            for y  in 0 .. n { 
                 self.draw_pix(x, y, false);
             }
         }
     }
 
     pub fn clear_screen(&mut self) {
-        for y in range(0, MAX_VERTICAL_PIXELS) {
-            for x in range(0, MAX_HORIZONTAL_PIXELS) {
+        for y in 0 .. MAX_VERTICAL_PIXELS {
+            for x in 0 .. MAX_HORIZONTAL_PIXELS {
                 self.screen[y][x] = false;
             }
         }
@@ -153,9 +152,9 @@ impl Graphics {
     
     //TODO improve as iinefficient (causes redrawing of entire screen)
     pub fn show(&mut self) {
-        for y in range(0, MAX_VERTICAL_PIXELS) {
-            for x in range(0, MAX_HORIZONTAL_PIXELS) {
-                self.out.draw_pix(x as int, y as int, self.screen[y][x]);
+        for y in 0 .. MAX_VERTICAL_PIXELS {
+            for x in 0 .. MAX_HORIZONTAL_PIXELS {
+                self.out.draw_pix(x as isize, y as isize, self.screen[y][x]);
             }
         }
         self.out.show();

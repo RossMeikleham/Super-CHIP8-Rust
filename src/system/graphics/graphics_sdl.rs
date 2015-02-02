@@ -7,23 +7,23 @@ pub struct Screen {
     surface :sdl::video::Surface,
     on_color : sdl::video::Color,
     off_color :sdl::video::Color,
-    width: uint,
-    height: uint,
-    x_max :uint,
-    y_max :uint
+    width: usize,
+    height: usize,
+    x_max :usize,
+    y_max :usize
 
 }
 
 impl Screen {
 
-    pub fn new(width :int, height :int, x_max :uint, y_max :uint) -> Screen {
-        sdl::init([sdl::InitFlag::Video].as_slice());     
+    pub fn new(width :isize, height :isize, x_max :usize, y_max :usize) -> Screen {
+        sdl::init(&[sdl::InitFlag::Video]);     
         sdl::wm::set_caption("CHIP-8 Emulator", "sdl");  
 
         let surface = 
             match sdl::video::set_video_mode(width, height, 32,
-                  [SurfaceFlag::HWSurface].as_slice(),
-                  [VideoFlag::DoubleBuf].as_slice()) {
+                  &[SurfaceFlag::HWSurface],
+                  &[VideoFlag::DoubleBuf]) {
                 
                 Ok(screen) => screen,
                 Err(err) => panic!("failed to set video mode: {}", err)
@@ -32,22 +32,22 @@ impl Screen {
         Screen { surface:surface, 
                  on_color:  sdl::video::RGB(0, 255, 0), /* Green */ 
                  off_color: sdl::video::RGB(0, 0,   0), /* Black */
-                 width:width as uint,
-                 height:height as uint,
+                 width:width as usize,
+                 height:height as usize,
                  x_max:x_max,
                  y_max:y_max 
                }
         }
   
-    pub fn set_x_max(&mut self, x:uint) {
+    pub fn set_x_max(&mut self, x:usize) {
         self.x_max = x;
     }
 
-    pub fn set_y_max(&mut self, y:uint) {
+    pub fn set_y_max(&mut self, y:usize) {
         self.y_max = y;
     }
 
-    pub fn draw_pix(&mut self, x_pos :int, y_pos :int, set:bool) {
+    pub fn draw_pix(&mut self, x_pos :isize, y_pos :isize, set:bool) {
         let x_unit = (self.width/self.x_max) as u16;
         let y_unit = (self.height/self.y_max) as u16;
 

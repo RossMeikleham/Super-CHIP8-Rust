@@ -18,4 +18,4 @@ path = "src/main.rs"
 time = "0.1.10"
 
 [dependencies.sdl]
-git = "https://github.com/RossMeikleham/rust-sdl"
+git = "https://github.com/brson/rust-sdl"
