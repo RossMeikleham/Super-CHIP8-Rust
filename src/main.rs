@@ -1,3 +1,4 @@
+#![feature(core, io, std_misc, os, path, rand)]
 extern crate time;
 
 use std::old_io::File; /* input/output */

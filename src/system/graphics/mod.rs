@@ -86,7 +86,7 @@ impl Graphics {
         let current_states = &mut (self.screen[starty as usize % 64])[startx as usize ..];
                         
         
-        let mut zipped_states = current_states.iter_mut().zip(pixel_states.iter());
+        let zipped_states = current_states.iter_mut().zip(pixel_states.iter());
         /* Set pixel to old pixel xor new pixel */
         for (old, new) in zipped_states { 
             if !unset_occured && *old == true && *new == true {
