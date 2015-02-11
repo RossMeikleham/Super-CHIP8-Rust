@@ -1,9 +1,9 @@
-#![feature(core, io, std_misc, os, path, rand)]
+#![feature(core, io, std_misc, os, path, env)]
 extern crate time;
 
 use std::old_io::File; /* input/output */
 use std::string::String;
-use std::os;
+use std::env;
 use system::CPU;
 use std::old_io::timer;
 use std::time::duration::Duration;
@@ -77,8 +77,15 @@ fn run_program(mut chip8 :system::CPU, cycle_max: u64, ins_per_sec: u64)  {
 
 
 fn main() {
-    let mut args = os::args();   
-    let file_name = args.remove(1);
+    let args = env::args();   
+
+    let file_name = match args.skip(1).next() {
+        Some(os_f) => match os_f.into_string() {
+            Ok(f) => f,
+            Err(_) => panic!("ROM file name doesn't contain valid unicode data")
+        },
+        None => panic!("Expected ROM file")
+    };
 
     let memory = match read_rom(file_name) {
         Ok(mem) => mem,

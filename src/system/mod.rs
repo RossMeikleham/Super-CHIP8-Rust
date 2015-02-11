@@ -1,7 +1,5 @@
-use std::rand::random;
-//use graphics::Graphics; 
-//use core::graphics::Mode;
-//use io::IO;
+extern crate rand;
+
 pub mod graphics;
 pub mod io;
 /* CPU, Graphics and Memory core */
@@ -397,7 +395,7 @@ impl CPU {
 
     /* set register to supplied value and a random integer between 0 and 255 */
     fn rand(&mut self, reg:u8, val:u8) {
-        self.registers[reg as usize] = val & random::<u8>();
+        self.registers[reg as usize] = val & rand::random::<u8>();
     }
 
     /* Set the delay timer to the value in the register */
