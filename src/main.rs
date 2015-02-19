@@ -1,4 +1,4 @@
-#![feature(core, io, std_misc, os, path, env)]
+#![feature(core, std_misc, env, old_io, old_path)]
 extern crate time;
 
 use std::old_io::File; /* input/output */
@@ -80,10 +80,7 @@ fn main() {
     let args = env::args();   
 
     let file_name = match args.skip(1).next() {
-        Some(os_f) => match os_f.into_string() {
-            Ok(f) => f,
-            Err(_) => panic!("ROM file name doesn't contain valid unicode data")
-        },
+        Some(os_f) => os_f,
         None => panic!("Expected ROM file")
     };
 

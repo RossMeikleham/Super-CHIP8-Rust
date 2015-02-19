@@ -15,7 +15,7 @@ name = "schip8"
 path = "src/main.rs"
 
 [dependencies]
-time = "0.1.10"
+time = "0.1.17"
 rand = "0.1.2"
 
 [dependencies.sdl]
