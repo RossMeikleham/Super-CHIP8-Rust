@@ -552,7 +552,7 @@ impl CPU {
     fn draw_extended_sprite(&mut self, start_x:u8, start_y:u8) {
         self.registers[FLAG] = 0;
 
-        for y in 0us .. 16us {
+        for y in 0usize .. 16 {
             let line = ((self.mem[self.index_reg as usize + (2 * y)] as u16) << 4) 
                 | (self.mem[self.index_reg as usize + (2 * y) + 1] as u16);
             if self.graphics.draw_line(
