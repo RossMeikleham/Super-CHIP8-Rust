@@ -2,14 +2,14 @@
 name = "Super CHIP8"
 version = "0.0.1"
 dependencies = [
- "rand 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "sdl 0.3.6 (git+https://github.com/brson/rust-sdl)",
- "time 0.1.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "time 0.1.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gcc"
-version = "0.1.7"
+version = "0.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -19,32 +19,32 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "log"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "rand"
-version = "0.1.3"
+version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "sdl"
 version = "0.3.6"
-source = "git+https://github.com/brson/rust-sdl#3bb9ef6cf9be040d30f5ac4faf8d619c9ea8d01f"
+source = "git+https://github.com/brson/rust-sdl#b5c49a63a879d0cc6fc5e7ca0273da7fdc5ce3ef"
 dependencies = [
- "rand 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rand 0.1.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "time"
-version = "0.1.17"
+version = "0.1.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gcc 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
