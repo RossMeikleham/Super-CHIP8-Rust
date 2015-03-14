@@ -1,4 +1,3 @@
-use std::iter::range_step;
 
 pub mod graphics_sdl;
 
@@ -103,7 +102,7 @@ impl Graphics {
     pub fn scroll_right(&mut self, n:u8) {
         let n = n as usize;
         for y in 0 .. get_height(self.mode) {
-            for x in range_step(get_width(self.mode) - 1, n  - 1, -1) {
+            for x in (get_width(self.mode) - 1 .. n  - 1).step_by( -1) {
                 let set = self.screen[y][x - n];
                 self.draw_pix(x, y, set);            
             }
@@ -131,7 +130,7 @@ impl Graphics {
         let y_max = get_height(self.mode);
         let n = n as usize;
         for x in 0 .. get_width(self.mode) {
-            for y in range_step(y_max - 1, n - 1, -1) {                
+            for y in(y_max - 1 .. n - 1).step_by( -1) {                
                 let set = self.screen[y - n][x];
                 self.draw_pix(x, y, set);            
             }

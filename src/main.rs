@@ -64,7 +64,7 @@ fn run_program(mut chip8 :system::CPU, cycle_max: u64, ins_per_sec: u64)  {
     
     'run : loop {
         let start_timer = time::precise_time_ns();
-        for _ in range(0, cycle_max) {
+        for _ in (0 .. cycle_max) {
             chip8.perform_cycle();
             /* Check if execution is finished */
             if chip8.is_finished() {
