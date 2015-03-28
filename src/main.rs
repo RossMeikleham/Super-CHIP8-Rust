@@ -1,14 +1,15 @@
-#![feature(core, std_misc, old_io, old_path)]
+#![feature(std_misc, old_io, step_by)]
 extern crate time;
 
-use std::old_io::File; /* input/output */
+use std::fs::File; /* input/output */
+use std::io::Read;
 use std::string::String;
 use std::env;
 use system::CPU;
-use std::old_io::timer;
 use std::time::duration::Duration;
 use std::iter;
-
+use std::path::Path;
+use std::old_io::timer;
 
 mod system;
 
@@ -24,14 +25,23 @@ static CYCLES_CHECK : u64 = 5;
  * if the file is too large or IoError is raised */
 fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
     
-    match File::open(&Path::new(file_path)).read_to_end() {
+    match File::open(Path::new(&file_path)) {
+        
+        Ok(f) => {
+            let rom_contents = f.bytes();
 
-        Ok(rom_contents) =>  {
             /* Programs start at address 0x200, in original implementation
              * 0x000 - 0x1FF reserved for VM, just pad start of mem with 
              * 0s in this case */
             let start_mem : Vec<u8>  = iter::repeat(0u8).take(START_RAM).collect();
-            let mem = start_mem + rom_contents.as_slice();
+            
+            let mut mem = start_mem;
+            for i in rom_contents {
+                match i {
+                    Ok(j) => mem.push(j),
+                    Err(_) => panic!{"Error reading file\n"}
+                }
+            }
             let size = mem.len();
 
             if size <= MAX_RAM { 
@@ -40,10 +50,10 @@ fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
                 Err(format!("game image is too large 
                     ({} bytes), must be a maximum of {} bytes"
                     ,size , MAX_RAM - START_RAM).to_string())
-            }
+            }        
         },
-        /* Error reading file */
-        Err(e) => Err(e.detail.unwrap_or("".to_string()))       
+             
+        Err(e) => Err(e.to_string())
     }
 } 
 

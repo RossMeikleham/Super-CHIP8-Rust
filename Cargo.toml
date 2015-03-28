@@ -16,7 +16,7 @@ path = "src/main.rs"
 
 [dependencies]
 time = "0.1.17"
-rand = "0.1.2"
+rand = "0.3.2"
 
 [dependencies.sdl]
 git = "https://github.com/brson/rust-sdl"
