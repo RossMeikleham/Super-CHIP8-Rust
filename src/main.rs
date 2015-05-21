@@ -1,4 +1,4 @@
-#![feature(std_misc, old_io, step_by)]
+#![feature(step_by, negate_unsigned)]
 extern crate time;
 
 use std::fs::File; /* input/output */
@@ -6,10 +6,9 @@ use std::io::Read;
 use std::string::String;
 use std::env;
 use system::CPU;
-use std::time::duration::Duration;
 use std::iter;
 use std::path::Path;
-use std::old_io::timer;
+use std::thread;
 
 mod system;
 
@@ -59,12 +58,12 @@ fn read_rom(file_path: String) -> Result<Vec<u8>,String> {
 
 
 fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
-    let current_time = time::precise_time_ns();
+    let current_time = time::precise_time_ns()/1000000;
     if old_time < current_time {
-        let expired_ns = current_time - old_time;    
-        let overall_duration_ns = (1000000000 * instructions)/ins_per_sec; /*Calculate duration instruction should take */
-        if overall_duration_ns > expired_ns { /* ensure that duration has expired until next cycles begin */
-            timer::sleep(Duration::nanoseconds((overall_duration_ns - expired_ns) as i64));            
+        let expired_ms = current_time - old_time;    
+        let overall_duration_ms = (1000 * instructions)/ins_per_sec; /*Calculate duration instruction should take */
+        if overall_duration_ms > expired_ms { /* ensure that duration has expired until next cycles begin */
+            thread::sleep_ms((overall_duration_ms - expired_ms) as u32);            
        }
     } 
 }
@@ -73,7 +72,7 @@ fn wait_for_next_cycle(old_time:u64, instructions:u64, ins_per_sec:u64 )  {
 fn run_program(mut chip8 :system::CPU, cycle_max: u64, ins_per_sec: u64)  {
     
     'run : loop {
-        let start_timer = time::precise_time_ns();
+        let start_timer = time::precise_time_ns()/1000000;
         for _ in (0 .. cycle_max) {
             chip8.perform_cycle();
             /* Check if execution is finished */
@@ -103,9 +102,3 @@ fn main() {
 
     run_program(system::CPU::new(memory), CYCLES_CHECK, INSTRUCTIONS_PER_SEC);
 }
-
-
-
-
-
-
