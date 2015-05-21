@@ -317,7 +317,7 @@ impl CPU {
     /* add the supplied value to the value currently
      * stored in the register and store the result in the register */
     fn add_reg_val(&mut self, reg:u8, val:u8) {
-        self.registers[reg as usize] += val;
+        self.registers[reg as usize] = self.registers[reg as usize].wrapping_add(val);
     }
     
     /* Copy the value of the second register into the first register */
@@ -350,7 +350,7 @@ impl CPU {
         let register2 = self.registers[reg2 as usize];
         self.registers[FLAG] =  
             match (0xFF - register1) < register2 { true => 1, false => 0};
-        self.registers[reg1 as usize] += register2;  
+        self.registers[reg1 as usize] = self.registers[reg1 as usize].wrapping_add(register2);  
     }
 
 
@@ -364,7 +364,7 @@ impl CPU {
         
         self.registers[FLAG] = 
             match register2 < register1 { true => 1, false => 0};
-        self.registers[store_reg as usize] = register1 -  register2;
+        self.registers[store_reg as usize] = register1.wrapping_sub(register2);
     }
 
 
