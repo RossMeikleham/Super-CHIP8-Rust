@@ -1,4 +1,3 @@
-#![feature(step_by, negate_unsigned)]
 extern crate time;
 
 use std::fs::File; /* input/output */
